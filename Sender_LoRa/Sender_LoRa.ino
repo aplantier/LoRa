@@ -61,12 +61,14 @@
 
 #define led         13  // Led de l'arduino
 
-            // valeurs Par deff pour la config LoRa
+// ** valeurs Par deff pour la config LoRa
 #define txPower     20 // puissance de transmission incl. []
 #define SprFac      12 // spreading Factor incl[7;12]
 #define BandWidth   125E3
 #define preamLengt      8   // preamble size
+#define CANAL       0xA2    //le canal de communication
 
+#define FRAMESIZE   10       // taille de la framme 
 
 
 
@@ -76,24 +78,32 @@ static int  i_periode         = 5000;     // Temps du cycle
 static int  i_AlertePeriode   = 500;      // Temps du cycle en periode d'alerte
 static bool b_Alerte            = false;    // Detection du feu : true 
 byte humTmp[5];                      // tableau de stockage des mesures Hum/ tmp 
-byte idTx;
-byte buffer[9]={0};
+byte idTx;                           //identifiant de l'appareil s'il nest pas enregistré dans tx =0 
+byte randNumber;                     // clé pour l'identifiant 
+byte buffer[FRAMESIZE]={0};           // la trame a envoyer
 
-
+// param LoRa
 int txPo=txPower;           // puissance d'emission 
 int spFa=SprFac;                // Spreading Factor
-long baWi=BandWidth;
-int prLe = preamLengt;
+long baWi=BandWidth;          
+int prLe = preamLengt;       // taille du preambule 
+
 
 // ** Librairies
-#include "misc.h"
-#include "humTemp.h"
 #include <SPI.h>
 #include <LoRa.h>
+#include "miscTx.h"
+#include "humTemp.h"
+
 
 // ** Entetes fonctions 
 void alarme();
 void flame_detected();
+void buildFrame(bool auth=false);
+void sendFrame();
+void enregistrementRx();
+
+
 // ** Initiatilisation 
 void setup (){
 
@@ -101,13 +111,17 @@ void setup (){
   pinMode(d_flame, INPUT);
   pinMode(d_tempHum, OUTPUT);                  //Init detecteur TempHum
 
-  pinMode(led,OUTPUT);      
-  pinMode(a_buzzer,OUTPUT);
+  pinMode(led,OUTPUT);      //led de la maquette 
+  pinMode(a_buzzer,OUTPUT);// le buzzer 
 
-  attachInterrupt(0, flame_detected, RISING);// interuption sur le vecteur 0 (pin 2(d2) au passage a létat haut
+  LoRa.setPins(10, 9, -1); // desactivation de d2 pour utiliser l'interuption 
+  attachInterrupt(digitalPinToInterrupt(d_flame), flame_detected, RISING);// interuption sur le vecteur 0 (pin 2(d2) au passage a létat haut
   Serial.begin (9600);  // Debut du serial
 
 
+
+
+ LoRa.onTxDone(onTxDone); // Je ne comprends pas comment set le call back ....
   Serial.println("Lora Sender");
   if(!LoRa.begin(915E6)){
     Serial.println("/!\\Lora echec");
@@ -116,57 +130,40 @@ void setup (){
   LoRa.setSpreadingFactor(spFa);
   LoRa.setSignalBandwidth(baWi);
   LoRa.setPreambleLength(prLe);
-  LoRa.setSyncWord(0xA2);
-
+  LoRa.setSyncWord(CANAL);
+  LoRa.enableCrc();           //activation du crc
   idTx=0;
 
 
-                       
+
+
 }
 
 // ** Boucle d'exec
 
 void loop()
 { 
-   // Trame a *  + La trame {alerte, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm} 8 Byte + `\0` 
-
-
   if(b_Alerte)                // Etat d'alerte : feu détecté 
   {
     alarme();  // SIgnal Sonore
     b_Alerte = digitalRead(d_flame)==HIGH ? true:false; // desactivation de l'alarme si le feu n'est plus detecté
-                                                        // TODO: remplacer par une interuption de l'alarme avec BP
+    return;
+    // TODO: remplacer par une interuption de l'alarme avec BP
   }
-  
+   
+
+   if(idTx==0) // pas encore authentifié 
+   {
+      enregistrementRx();//
+
+    }
 
 
 
-  buffer[0]=(char) b_Alerte ? 1:0;
-  buffer[1]=(char) (humTemp() ? 0:1);// si pas d'erreurs err=0
-  buffer[2]=(char)humTmp[0];
-  buffer[3]=(char)humTmp[1];
-  buffer[4]=(char)humTmp[2];
-  buffer[5]=(char)humTmp[3];
-  buffer[6]=(unsigned char)  256  - (256*analogRead(a_flame)/1024) ;
-  
-  char cksm=0;
-  for(int i=0 ; i<7; i++) cksm+=(char)buffer[i];
-    buffer[7]=cksm;
-  buffer[8]=(char)'\0';
-  
+  buildFrame();
+  sendFrame();
 
-Serial.println(" Trame a envoyer :");
-  for(int cursor=0; cursor<9 ; cursor++){
-    Serial.print(buffer[cursor],DEC);
-    Serial.print(',');
-  }
-Serial.println();
 
-LoRa.beginPacket();
-  for(int cursor=0; cursor<9 ; cursor++)
-    LoRa.print(buffer[cursor],DEC);
-LoRa.endPacket();
-//LoRa.sleep();
 
   //Serial.print(buffer);
 
@@ -179,7 +176,126 @@ LoRa.endPacket();
  * @brief Fonction appelée sur l'interuption
  * @details Passage a l'etat d'alerte haut 
  */
-void flame_detected() {
+ void flame_detected() {
   b_Alerte = true;
   Serial.println("Interuption : Flame detectee");
 }
+
+/**
+ * @brief Construction de la tramme a envoyer
+ * @details construit la tramme 
+ * {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
+ */
+void buildFrame(bool auth=false){
+  Serial.println(" Construction tramme authentification");
+  if(auth){ // trame d'authentification
+
+    for( int buffCursor=0 ; buffCursor < FRAMESIZE ; buffCursor++){
+      switch(buffCursor){
+        case 0:             buffer[buffCursor]          =(byte)idTx;
+        break;
+  
+          case 1:             buffer[buffCursor]          = (byte)randNumber; 
+          break;
+          
+          case FRAMESIZE-1:   buffer[buffCursor]          = (byte)'\0';       
+          break;
+          
+          case FRAMESIZE-2:   buffer[buffCursor]=0; 
+          for(int i=0; i<FRAMESIZE-2; i++) 
+          buffer[buffCursor]+=(char)buffer[i];           
+          break;
+          
+          default:            buffer[buffCursor]          = (byte)0;
+        }
+    }
+    
+    return; // RTant que Rx n'est pas authentifié on sort. 
+}
+
+Serial.println(" Construction tramme mesure de données");
+for( int buffCursor=0 ; buffCursor < FRAMESIZE ; buffCursor++){
+  switch(buffCursor){
+    case 0:             buffer[buffCursor]          =(char)idTx;       // identifiant de Tx  
+    break;
+
+    case 1:             buffer[buffCursor]          =(char) b_Alerte ? 1:0; // erreur dans les mesures HumTemp
+    break;
+
+    case 2:             buffer[buffCursor]          =(char) (humTemp() ? 0:1);// si pas d'erreurs err=0       
+    break;  
+    
+    case 3:             buffer[buffCursor]          =(char)humTmp[0];//Humidité entier
+    break;
+    
+    case 4:             buffer[buffCursor]          =(char)humTmp[1]; //Humidité decimal      
+    break;
+    
+    case 5:             buffer[buffCursor]          =(char)humTmp[2];   // Temp entier    
+    break;
+    
+    case 6:             buffer[buffCursor]          =(char)humTmp[3];   // Temp decimal     
+    break;
+    
+    case 7:             buffer[buffCursor]          =(unsigned char)  256  - (256*analogRead(a_flame)/1024) ; // Valeur Infra
+    break;
+    
+    case FRAMESIZE-1:   buffer[buffCursor]          = (char)'\0';       
+    break;
+
+    case FRAMESIZE-2: {                   // Calcul du checksum 
+      buffer[buffCursor]=0; 
+      for(int i=0; i<FRAMESIZE-2; i++) 
+      buffer[buffCursor]+=(char)buffer[i];            
+    }
+    break;
+
+    default:            buffer[buffCursor]          = (char)0; // remplissage a zero de la frame pour les indexes non renseignés
+  }
+  }
+}
+
+
+void sendFrame(){
+  Serial.print(" Emission de la Tramme : ");
+  onTxDone();
+  LoRa.beginPacket();
+  for(int cursor=0; cursor<FRAMESIZE ; cursor++)
+    {
+      LoRa.print(buffer[cursor]);
+      LoRa.print(';');
+    }
+  LoRa.endPacket();
+  LoRa.sleep();
+  return;
+}
+
+
+/**
+ * @brief Fonction d'enregistrement de Tx auprès de Rx 
+ * @details Tx par defaut ne connait pas son Tx. Pour pouvoir lui envoyer des donnés, il doit être authentifié.
+ *          pour cela il passe en emetteur et envoie sa clé d'auth puis se met en recepteur. Tant qu'une trame de validation
+ *          de l'enregistrement n'arrive pas, il continue d'essayer. 
+ */
+void enregistrementRx(){
+
+      randNumber = (char) random(255); // clé d'authentification
+      buildFrame(true);// construction de la tramme d'authentification
+      sendFrame();
+      LoRa.receive();
+
+      int packetSize = LoRa.parsePacket();
+      if (packetSize) {// received a packet
+
+
+        Serial.print("Received packet '");
+        while (LoRa.available()) {
+          Serial.print((char)LoRa.read());
+      }// print RSSI of packet
+      Serial.print("' with RSSI ");
+      Serial.println(LoRa.packetRssi());
+    }
+
+    return;
+}
+
