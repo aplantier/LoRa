@@ -32,13 +32,14 @@ bool humTemp(){
 
 byte read_data()
 {
+  byte i=0;
   byte result = 0;
-  for (int i = 0; i < 8; i++) {
+  for (i = 0; i < 8; i++) {
      if (digitalRead (d_tempHum) == LOW) {
       while (digitalRead(d_tempHum) == LOW); // wait 50us
       delayMicroseconds(30); //The duration of the high level is judged to determine whether the d_tempHumhumTmpa is '0' or '1'
       if (digitalRead(d_tempHum) == HIGH)
-        result |= (1 << (7 - i)); //High in the former, low in the post
+        result |= (1 << (8 - i)); //High in the former, low in the post
     while (digitalRead(d_tempHum) == HIGH); //d_tempHumhumTmpa '1', waiting for the next bit of reception
     }
   }
@@ -47,7 +48,7 @@ byte read_data()
 
 void probe_humTemp(){
   digitalWrite(d_tempHum, LOW); //Etat bas au bus pour initier signal => debut mesure de la sonde 
-  delay(30); //un peu de temps pour laisser la sonde mesurer 
+  delay(40); //un peu de temps pour laisser la sonde mesurer 
   
   digitalWrite(d_tempHum, HIGH);// Etat haut pour initier l'envoi des datas 
   delayMicroseconds(40); //Wait for DHT11 to respond
@@ -58,7 +59,7 @@ void probe_humTemp(){
   
   if(digitalRead(d_tempHum) == LOW)
     delayMicroseconds(80); //
-  for(int i = 0; i < 4; i++) 
+  for(int i = 0; i < 5; i++) 
     humTmp[i] = read_data();
   pinMode(d_tempHum, OUTPUT); // fin de reception, sonde desactivee
   digitalWrite(d_tempHum, HIGH); //After the completion of a release of data bus, waiting for the host to start the next signal
