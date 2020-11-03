@@ -35,13 +35,11 @@ byte read_data()
   byte i=0;
   byte result = 0;
   for (i = 0; i < 8; i++) {
-     if (digitalRead (d_tempHum) == LOW) {
-      while (digitalRead(d_tempHum) == LOW); // wait 50us
-      delayMicroseconds(30); //The duration of the high level is judged to determine whether the d_tempHumhumTmpa is '0' or '1'
+      while (digitalRead(d_tempHum) == LOW); // debut de la transmission par un etat bas
+      delayMicroseconds(30); //laisser le temps de changement de bit
       if (digitalRead(d_tempHum) == HIGH)
         result |= (1 << (8 - i)); //High in the former, low in the post
     while (digitalRead(d_tempHum) == HIGH); //d_tempHumhumTmpa '1', waiting for the next bit of reception
-    }
   }
   return result;
 }
