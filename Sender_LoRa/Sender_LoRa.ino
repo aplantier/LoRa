@@ -20,12 +20,21 @@
  *      InPin                                    5(D5) 
  *      
  *      Valeur de sortie: Trame de  5 bytes 
- *      Utilisationd de la librairie DHT https://github.com/adafruit/DHT-sensor-library
+ *       
  *      
  *  Fonctionalités
  *  ----------------------
  *  + Intéruption sur le vecteur 0 (pin 2 (D2))
  * 
+ *  + La trame {alerte, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm} 8 Byte 
+ *  + La trame : alerte feu détecté : 1 , 0 sinon
+ *               err,   erreur parmis les mesures 
+ *               hum_10, dizaine humidite
+ *               hum_dec, 
+ *               tmp_10, 
+ *               tmp_dec, 
+ *               infra, taux de rayonement infra 
+ *               chksm cheksum 
  * 
  */
 // ** Declaration des pins (a : analog, d: digital)
@@ -33,7 +42,6 @@
 #define d_flame     2
 
 #define d_tempHum   5   // ky-015 Temperature humidité
-#define DHTTYPE     DHT11// Pour la classe DHT 
 
 #define a_buzzer    A1
 
@@ -41,17 +49,17 @@
 
 
 
-// ** Librairies
-#include <DHT.h>
 
 
 // ** Variables globales 
 static int  i_periode         = 5000;     // Temps du cycle 
 static int  i_AlertePeriode   = 500;      // Temps du cycle en periode d'alerte
 static bool b_Alerte            = false;    // Detection du feu : true 
+byte humTmp[5];                      // tableau de stockage des mesures Hum/ tmp 
 
-DHT dht(d_tempHum,DHTTYPE);                        // Accesseur pour le capteur tempHum
-
+// ** Librairies
+#include "misc.h"
+#include "humTemp.h"
 // ** Entetes fonctions 
 void alarme();
 void flame_detected();
@@ -60,7 +68,7 @@ void setup (){
 
   pinMode(a_flame, INPUT);                    // Init detecteur Flame input
   pinMode(d_flame, INPUT);
-  pinMode(d_tempHum, INPUT);                  //Init detecteur TempHum
+  pinMode(d_tempHum, OUTPUT);                  //Init detecteur TempHum
 
   pinMode(led,OUTPUT);      
   pinMode(a_buzzer,OUTPUT);
@@ -73,10 +81,8 @@ void setup (){
 
 void loop()
 { 
-  byte buffer[128]={0};
-  float f_infrarouge=0.0;
-  float f_temperature=0.0;
-  float f_humidite=0.0;
+  byte buffer[9]={0}; // Trame a *  + La trame {alerte, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm} 8 Byte 
+
 
   if(b_Alerte)                // Etat d'alerte : feu détecté 
   {
@@ -84,51 +90,32 @@ void loop()
     b_Alerte = digitalRead(d_flame)==HIGH ? true:false; // desactivation de l'alarme si le feu n'est plus detecté
                                                         // TODO: remplacer par une interuption de l'alarme avec BP
   }
-
-  f_infrarouge = analogRead(a_flame);
   
-  dht.read(d_tempHum);
-  f_temperature = dht.readTemperature();
-  f_humidite    = dht.readHumidity();
+
+  buffer[0]=(char) b_Alerte ? 1:0;
+  buffer[1]=(char) (humTemp() ? 0:1);// si pas d'erreurs err=0
+  buffer[2]=(char)humTmp[0];
+  buffer[3]=(char)humTmp[1];
+  buffer[4]=(char)humTmp[2];
+  buffer[5]=(char)humTmp[3];
+  buffer[6]=(unsigned char)  256  - (256*analogRead(a_flame)/1024) ;
+  for(int i=0 ; i<7; i++,buffer[7]+=buffer[i]);
+  buffer[8]=(char)'\0';
+  //Serial.println((char*)buffer);
 
 
+  for(int cursor=0; cursor<9 ; cursor++){
+    Serial.print((int)buffer[cursor]);
+    Serial.print(',');
+  }
+Serial.println();
 
-  Serial.print("Print");
-  Serial.print();
+  //Serial.print(buffer);
 
   delay(b_Alerte?i_AlertePeriode:i_periode); // en fonction de l'etat d'alerte, la periode varie
-
-
 }
 
 
-/**
- * @brief Signal d'alerte audio
- * @details [long description]
- */
-void alarme() {
-  
-  Serial.println("Alerte Incendie !");
-  
-  unsigned char i;
-  for (i = 0; i < 50; i++)
-  {
-    digitalWrite (a_buzzer, HIGH) ;
-    delay (1) ;
-    digitalWrite (a_buzzer, LOW) ;
-    delay (1) ;
-  }
-  //Frequency 2
-  for (i = 0; i < 100; i++)
-  {
-    digitalWrite (a_buzzer, HIGH) ;
-    delay (2) ;
-    digitalWrite (a_buzzer, LOW) ;
-    delay (2) ;
-  }
-
-  
-}
 
 /**
  * @brief Fonction appelée sur l'interuption
