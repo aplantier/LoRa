@@ -37,12 +37,4 @@ void alarme() {
 
 
 
- static void onTxDone(){
 
-  Serial.print("ok :[");
-  for(int cursor=0; cursor<9 ; cursor++){
-    Serial.print(buffer[cursor],DEC);
-    Serial.print(cursor==8?'\ ':',');
-  }
-  Serial.println(']');
-}
