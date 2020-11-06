@@ -22,7 +22,7 @@ Pour ce projet nous travaillons avec des arduino intégrant des modules **LoRa**
 
 Voici le schéma général du projet.
 
-![Projet Général](/home/ourson/cours/ObjCo/Projet/LoRa/src/schem_General.png)
+![Projet Général](/src/schem_General.png)
 
 ### Les modules Emeteurs : Sender/ TX 
 
