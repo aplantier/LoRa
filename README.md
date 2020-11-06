@@ -94,7 +94,7 @@ ATMega328p       LoRa RFM95W
 
 ## Les modules Emeteurs : Sender/ TX 
 
-+ Les pins utilisées pour les capteurs : 
+### Les pins utilisées pour les capteurs : 
 
 ``` 
 
@@ -111,7 +111,7 @@ ATMega328p       Capteurs
 A1          <----> Sortie Analogique 
 ```
 
-+ Les variables 
+### Les variables 
 ``` c++
 
 // ** Variables globales 
@@ -127,17 +127,34 @@ byte buffer[FRAMESIZE] = { // buffer de communication pour les données
 };
 ```
 
+### la tramme de mesures 
 Parlons en détail de **buffer** et **FRAMESIZE** : buffer contient la trame type envoyée via le protocole LoRa et contenant les données mesurées par Tx. 
+Sa taille est fixée (**FRAMESIZE**) les mesures décimales ont une précision de E-2 fixe.
+
+
+
 
 A savoir que le **LoRa** transmet les trames bytes après bytes ( non-signés ). Le choix de trame que j'ai choisis est le suivant 
 
-![Trame](/src/trame.png)
+![Trame](/src/tramme.png)
+
++ **IdTx** identifiant de l'appareil 
++ **Etat** Etat de l'appareil (normal/urgence-> feu)
++ **erreur** Le capteur TempHum peut avoir des ratés cependant les valeures sont soouvent cohérente. J'ai décidé de les garder a chaque fois avec ce code d'erreur qui me permettra de faire un post traitement sur ces données 
++ **Humidité** sur 2 bytes le premier pour la partie entière la seconde pour la partie decimale 
++ **Température** sur 2 bytes le premier pour la partie entière la seconde pour la partie decimale 
++ ** Rayonnement infrarouge ** en %, plus le seuil est haut plus le rayonnement est fort 
++ **Checksum**  somme des valeurs de la tramme dans un byte non signé 
++ **byte de fin de ligne** 
+
+
+
+
+
 
 ## Le module recepteur : Receiver/ Rx 
 
 ## Le Software en python 
 
-
-
-##liens Utiles 
+## liens Utiles 
 
