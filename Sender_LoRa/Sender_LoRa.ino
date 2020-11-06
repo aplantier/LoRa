@@ -50,6 +50,12 @@
  *  ----------------------
  *  Canal : 0xA2
  *  
+ *  
+ *  Dépendances
+ *  ----------------------
+ *   + miscTx.h : fonctions diverse pour Tx (Alarme, affichage formaté des mesures sur le serial )
+ *   + humTemp.h Fonctions d'aquisition des mesures du capteur Ky-015
+ *   + communication.h : Fonction comunes Tx/Rx pour le transfert et reception de trammes LoRa 
  */
 // ** Declaration des pins (a : analog, d: digital)
 #define a_flame A0 // ky-026 flame
@@ -93,14 +99,12 @@ int prLe = preamLengt; // taille du preambule
 #include <LoRa.h>
 
 #include "miscTx.h"
-
 #include "humTemp.h"
-
 #include "communication.h"
 
 
+
 // ** Entetes fonctions 
-void alarme();
 void flame_detected();
 void buildFrame(bool auth = false);
 void sendFrame();
@@ -152,9 +156,7 @@ void loop() {
   {
     alarme(); // SIgnal Sonore
     b_Alerte = digitalRead(d_flame) == HIGH ? true : false; // desactivation de l'alarme si le feu n'est plus detecté
-    buildFrame();
-    sendFrame(buffer, FRAMESIZE);
-    return;
+
     // TODO: remplacer par une interuption de l'alarme avec BP
   }
 
@@ -172,7 +174,7 @@ void loop() {
  * @brief Fonction appelée sur l'interuption
  * @details Passage a l'etat d'alerte haut 
  */
-void flame_detected() {
+ void flame_detected() {
   b_Alerte = true;
   Serial.println("Interuption : Flame detectee");
 }
@@ -183,75 +185,75 @@ void flame_detected() {
  * tramme donnée : {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
  * tramme authentification : {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
  */
-void buildFrame(bool auth = false) {
+ void buildFrame(bool auth = false) {
   if (auth) { // trame d'authentification
-    Serial.println(" Construction tramme authentification");
+  Serial.println(" Construction tramme authentification");
 
-    for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
-      switch (buffCursor) {
+  for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
+    switch (buffCursor) {
       case 0:
-        buffer[buffCursor] = (byte) idTx;
-        break;
+      buffer[buffCursor] = (byte) idTx;
+      break;
 
       case 1:
-        buffer[buffCursor] = (byte) randNumber;
-        break;
+      buffer[buffCursor] = (byte) randNumber;
+      break;
 
       case FRAMESIZE - 1:
-        buffer[buffCursor] = (byte)
-        '\0';
-        break;
+      buffer[buffCursor] = (byte)
+      '\0';
+      break;
 
       case FRAMESIZE - 2:
-        buffer[buffCursor] = 0;
-        for (int i = 0; i < FRAMESIZE - 2; i++)
-          buffer[buffCursor] += (char) buffer[i];
-        break;
+      buffer[buffCursor] = 0;
+      for (int i = 0; i < FRAMESIZE - 2; i++)
+      buffer[buffCursor] += (char) buffer[i];
+      break;
 
       default:
-        buffer[buffCursor] = (byte) - 11;
-      }
+      buffer[buffCursor] = (byte) - 11;
     }
-    Serial.println("Affichage de la trame d'authentification");
-    printFrame(buffer, FRAMESIZE);
+  }
+  Serial.println("Affichage de la trame d'authentification");
+  printFrame(buffer, FRAMESIZE);
 
     return; // RTant que Rx n'est pas authentifié on sort. 
   }
   for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
     switch (buffCursor) {
-    case 0:
+      case 0:
       buffer[buffCursor] = (char) idTx; // identifiant de Tx  
       break;
 
-    case 1:
+      case 1:
       buffer[buffCursor] = (char) b_Alerte ? 1 : 0; // 
       break;
 
-    case 2:
+      case 2:
       buffer[buffCursor] = (char)(humTemp() ? 0 : 1); // si pas d'erreurs err=0       
       break;
 
-    case 3:
+      case 3:
       buffer[buffCursor] = (char) humTmp[0]; //Humidité entier
       break;
 
-    case 4:
+      case 4:
       buffer[buffCursor] = (char) humTmp[1]; //Humidité decimal      
       break;
 
-    case 5:
+      case 5:
       buffer[buffCursor] = (char) humTmp[2]; // Temp entier    
       break;
 
-    case 6:
+      case 6:
       buffer[buffCursor] = (char) humTmp[3]; // Temp decimal     
       break;
 
-    case 7:
+      case 7:
       buffer[buffCursor] = (unsigned char) 256 - (256 * analogRead(a_flame) / 1024); // Valeur Infra
       break;
 
-    case FRAMESIZE - 1:
+      case FRAMESIZE - 1:
       buffer[buffCursor] = (char)
       '\0';
       break;
@@ -259,7 +261,7 @@ void buildFrame(bool auth = false) {
     case FRAMESIZE - 2: { // Calcul du checksum 
       buffer[buffCursor] = 0;
       for (int i = 0; i < FRAMESIZE - 2; i++)
-        buffer[buffCursor] += (char) buffer[i];
+      buffer[buffCursor] += (char) buffer[i];
     }
     break;
 
@@ -275,7 +277,7 @@ void buildFrame(bool auth = false) {
  *          pour cela il passe en emetteur et envoie sa clé d'auth puis se met en recepteur. Tant qu'une trame de validation
  *          de l'enregistrement n'arrive pas, il continue d'essayer. 
  */
-void enregistrementRx() {
+ void enregistrementRx() {
 
   byte receptFrame[50] = {
     0
@@ -286,25 +288,33 @@ void enregistrementRx() {
   LoRa.receive();
 
   int tentatives = 0; //
-  int timeout = 250;
+  int timeout =10000;
+  int pcktsize=0;
   while (tentatives < 10 && timeout != 0) {
-
-    if (LoRa.available()) {
+    pcktsize=LoRa.parsePacket();
+    if (pcktsize) {
       Serial.print("Tentative apairrement :");
       Serial.print(tentatives + 1, DEC);
-      Serial.print("/10");
-
-      if (getFramme(receptFrame, 50, LoRa.parsePacket()) && ( * receptFrame == randNumber)) {
+      Serial.println("/10");
+      getFramme(receptFrame, 50, pcktsize);
+      
+      if ( ( * receptFrame == randNumber)) {
         idTx = * (1 + receptFrame);
         Serial.print("Appairement avec Rx réussi id :");
         Serial.println(idTx);
+        buildFrame(true); // construction de la tramme d'authentification
+        sendFrame(buffer, FRAMESIZE);
+        LoRa.receive();
         return;
       }
-      else 
-        tentatives++;
+       tentatives++;
+       sendFrame(buffer, FRAMESIZE);
+       LoRa.receive();
+       delay(2000);
     }
-
+      timeout--;
+      
   }
-  Serial.print("Impossible de joindre Rx");
+  Serial.println("Impossible de joindre Rx");
   return;
 }

@@ -1,0 +1,53 @@
+.TH "Sender_LoRa/humTemp.h" 3 "Fri Nov 6 2020" "Projet Lora" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Sender_LoRa/humTemp.h
+.SH SYNOPSIS
+.br
+.PP
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "byte \fBread_data\fP ()"
+.br
+.ti -1c
+.RI "void \fBprobe_humTemp\fP ()"
+.br
+.ti -1c
+.RI "bool \fBhumTemp\fP ()"
+.br
+.RI "Fonction de mesure de la temperature et stockage dans le tableau global humTmp\&. "
+.in -1c
+.SH "Function Documentation"
+.PP 
+.SS "bool humTemp ()"
+
+.PP
+Fonction de mesure de la temperature et stockage dans le tableau global humTmp\&. [long description] 
+.PP
+\fBReturns\fP
+.RS 4
+true si tout s'est bien passé 
+.RE
+.PP
+
+.PP
+Definition at line 20 of file humTemp\&.h\&.
+.SS "void probe_humTemp ()"
+
+.PP
+Definition at line 45 of file humTemp\&.h\&.
+.SS "byte read_data ()"
+Antoine PLANTIER 
+.SH "Projet Lora"
+.PP
+Fonctions gèrant le capteur d'humidite et de temperature
+.PP
+Vu la librairie DHT https://github.com/adafruit/DHT-sensor-library Ne fonctionne pas parfaitement et contre productif pour récuperer les valeurs en char* 
+.PP
+Definition at line 32 of file humTemp\&.h\&.
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Projet Lora from the source code\&.

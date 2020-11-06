@@ -1,0 +1,90 @@
+\doxysection{communication.\+h File Reference}
+\label{communication_8h}\index{communication.h@{communication.h}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+byte \textbf{ byte\+Tab\+To\+Byte} (byte $\ast$a\+\_\+byte\+Tab\+To\+Parse, int data\+Size)
+\begin{DoxyCompactList}\small\item\em Conversion d\textquotesingle{}une suite de byte en un byte. \end{DoxyCompactList}\item 
+void \textbf{ send\+Frame} (byte $\ast$a\+\_\+frame, int a\+\_\+frame\+Size)
+\item 
+bool \textbf{ get\+Framme} (byte $\ast$a\+\_\+output\+Frame, int a\+\_\+i\+\_\+output\+Frame\+Size, int a\+\_\+i\+\_\+fram\+Size)
+\begin{DoxyCompactList}\small\item\em Fonction de reception de tramme. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\label{communication_8h_a82e1ddd9875718acdfca9e2def0b4b60}} 
+\index{communication.h@{communication.h}!byteTabToByte@{byteTabToByte}}
+\index{byteTabToByte@{byteTabToByte}!communication.h@{communication.h}}
+\doxysubsubsection{byteTabToByte()}
+{\footnotesize\ttfamily byte byte\+Tab\+To\+Byte (\begin{DoxyParamCaption}\item[{byte $\ast$}]{a\+\_\+byte\+Tab\+To\+Parse,  }\item[{int}]{data\+Size }\end{DoxyParamCaption})}
+
+
+
+Conversion d\textquotesingle{}une suite de byte en un byte. 
+
+Antoine P\+L\+A\+N\+T\+I\+ER \doxysubsection{Projet Lora}\label{communication_8h_autotoc_md0}
+Fonctions comunes \doxyref{Rx}{p.}{struct_rx} Tx pour la reception et l\textquotesingle{}envoie de tramme
+
+Le module Lo\+Ra décompose les données en byte il faut donc les rassembler
+
+
+\begin{DoxyParams}{Parameters}
+{\em a\+\_\+byte\+Tab\+To\+Parse} & contien les byte a merge \\
+\hline
+{\em data\+Size} & le nombre d\textquotesingle{}éléments a merge\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+[description] 
+\end{DoxyReturn}
+
+
+Definition at line 91 of file communication.\+h.
+
+Here is the caller graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=277pt]{communication_8h_a82e1ddd9875718acdfca9e2def0b4b60_icgraph}
+\end{center}
+\end{figure}
+\mbox{\label{communication_8h_abb5214cda786d66f5e0bb19bdfa1267b}} 
+\index{communication.h@{communication.h}!getFramme@{getFramme}}
+\index{getFramme@{getFramme}!communication.h@{communication.h}}
+\doxysubsubsection{getFramme()}
+{\footnotesize\ttfamily bool get\+Framme (\begin{DoxyParamCaption}\item[{byte $\ast$}]{a\+\_\+output\+Frame,  }\item[{int}]{a\+\_\+i\+\_\+output\+Frame\+Size,  }\item[{int}]{a\+\_\+i\+\_\+fram\+Size }\end{DoxyParamCaption})}
+
+
+
+Fonction de reception de tramme. 
+
+Fonction d\textquotesingle{}aquisition d\textquotesingle{}une frame
+
+Une trame recue est formatée avec des séparateurs \textquotesingle{};\textquotesingle{} le protocole Lo\+Ra décompose les données \+: 123 devient 1, 2 ,3
+
+il faut donc reformater la trame
+
+Pre condition, pas de trame qui commencent par un separateur! \begin{DoxyReturn}{Returns}
+bool false si erreur dans la lecture de frame 
+\end{DoxyReturn}
+
+
+Definition at line 56 of file communication.\+h.
+
+Here is the call graph for this function\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=277pt]{communication_8h_abb5214cda786d66f5e0bb19bdfa1267b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\label{communication_8h_ac7f07b504b700f190e692bb2bcc56b1f}} 
+\index{communication.h@{communication.h}!sendFrame@{sendFrame}}
+\index{sendFrame@{sendFrame}!communication.h@{communication.h}}
+\doxysubsubsection{sendFrame()}
+{\footnotesize\ttfamily void send\+Frame (\begin{DoxyParamCaption}\item[{byte $\ast$}]{a\+\_\+frame,  }\item[{int}]{a\+\_\+frame\+Size }\end{DoxyParamCaption})}
+
+
+
+Definition at line 26 of file communication.\+h.
+

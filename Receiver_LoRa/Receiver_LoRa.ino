@@ -57,7 +57,7 @@ int prLe = preamLengt;
 byte buffer[FRAMESIZE] = {
   0
 }; // tramme de buffing contenant la data netoyée 
-volatile int logedIn = 0; // nombre d'appareils Tx enregistrés
+static int logedIn = 0; // nombre d'appareils Tx enregistrés
 
 // ** Librairies
 #include <SPI.h>
@@ -105,19 +105,27 @@ void loop() {
         timer =0;
   }
 
+    
 
-  if (getFramme(buffer, FRAMESIZE, LoRa.parsePacket())) { // received a packet
+  int pcktSize=LoRa.parsePacket();
+  if ( pcktSize ) { // received a packet
 
-    if ( ( * buffer > logedIn ) ||  ( * buffer < 0) ) return; // si un appareil avec un id incohérent,
-
+    getFramme(buffer, FRAMESIZE,pcktSize );
     if ( * buffer == 0) // trame recu d'un appareil non apairé 
     {
-      enregistrementTx( * (buffer + 1)); // enregistrement de l'appareil avec la clé 
+      enregistrementTx( *(buffer + 1)); // enregistrement de l'appareil avec la clé 
       return;
     }
+    if ( ( * buffer > logedIn ) ||  ( * buffer < 0) )
+    {
+      Serial.println("Tentative de conection invalide");
+     return; // si un appareil avec un id incohérent,
+
+    }
+
 
   
-    update(buffer);
+    update(buffer); // LoRa.packetRssi(); 
 
   }
 }
@@ -136,22 +144,37 @@ void enregistrementTx(byte a_key) {
   byte answer[5] = {
     a_key,
     logedIn + 1,
-    (char)'\0'
+    '\0'
   };
-  sendFrame(answer, 3);
-  LoRa.receive(); // on se met en recepteur pour recevoir la réponse
-  int timout = MAXREGISTRE - logedIn;
-  while (timout--> 0) { // Tentatives de conections = au nombre de device non authentifié
+  sendFrame(answer, 5);
+   LoRa.receive();
+   // on se met en recepteur pour recevoir la réponse
+  int timout = 10000;
+  while (timout-- != 0) { // Tentatives de conections = au nombre de device non authentifié
+    
+    
+    if (LoRa.parsePacket() ) {
+     
+        getFramme(buffer, FRAMESIZE, LoRa.available());
+        Serial.print("--- [ Apairement : ");
+      if (( * buffer == logedIn + 1) && (a_key == * (1 + buffer)))
+      {
 
-    if (getFramme(buffer, FRAMESIZE, LoRa.parsePacket()) && ( * buffer == logedIn + 1) && (a_key == * (1 + buffer))) {
       logedIn++;
       registre[logedIn].actif = false;// l'appareil est enregistré mais ne sera activé que à la première reception
       registre[logedIn].reportCount = 0;
-      Serial.print("--- [ Apairement Reussi avec :");
+      Serial.print("=  Reussi avec :");
       Serial.println(logedIn);
       return;
+      }
+      else 
+      Serial.println(" échoué");
 
     }
+    delay(2000);
+    Serial.println(" OUverture LoRa echoué");
+
+    
 
   }
 }

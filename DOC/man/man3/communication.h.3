@@ -1,0 +1,76 @@
+.TH "Sender_LoRa/communication.h" 3 "Fri Nov 6 2020" "Projet Lora" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Sender_LoRa/communication.h
+.SH SYNOPSIS
+.br
+.PP
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "byte \fBbyteTabToByte\fP (byte *a_byteTabToParse, int dataSize)"
+.br
+.RI "Conversion d'une suite de byte en un byte\&. "
+.ti -1c
+.RI "void \fBsendFrame\fP (byte *a_frame, int a_frameSize)"
+.br
+.ti -1c
+.RI "bool \fBgetFramme\fP (byte *a_outputFrame, int a_i_outputFrameSize, int a_i_framSize)"
+.br
+.RI "Fonction de reception de tramme\&. "
+.in -1c
+.SH "Function Documentation"
+.PP 
+.SS "byte byteTabToByte (byte * a_byteTabToParse, int dataSize)"
+
+.PP
+Conversion d'une suite de byte en un byte\&. Antoine PLANTIER 
+.SH "Projet Lora"
+.PP
+Fonctions comunes \fBRx\fP Tx pour la reception et l'envoie de tramme
+.PP
+Le module LoRa décompose les données en byte il faut donc les rassembler
+.PP
+\fBParameters\fP
+.RS 4
+\fIa_byteTabToParse\fP contien les byte a merge 
+.br
+\fIdataSize\fP le nombre d'éléments a merge
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+[description] 
+.RE
+.PP
+
+.PP
+Definition at line 91 of file communication\&.h\&.
+.SS "bool getFramme (byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize)"
+
+.PP
+Fonction de reception de tramme\&. Fonction d'aquisition d'une frame
+.PP
+Une trame recue est formatée avec des séparateurs ';' le protocole LoRa décompose les données : 123 devient 1, 2 ,3
+.PP
+il faut donc reformater la trame
+.PP
+Pre condition, pas de trame qui commencent par un separateur! 
+.PP
+\fBReturns\fP
+.RS 4
+bool false si erreur dans la lecture de frame 
+.RE
+.PP
+
+.PP
+Definition at line 56 of file communication\&.h\&.
+.SS "void sendFrame (byte * a_frame, int a_frameSize)"
+
+.PP
+Definition at line 26 of file communication\&.h\&.
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Projet Lora from the source code\&.

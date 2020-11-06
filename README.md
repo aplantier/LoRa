@@ -46,8 +46,6 @@ https://www.arduinoforbeginners.com/ky-026-arduino-flame-ir-sensor/
 
 ## Fonctionnement général 
 
-
-
 Le module Recepteur **Rx/receiver** est conecté par le port série à l'ordinateur sur lequel tourne le programme en python. 
 
 Le module recepteur **Rx** est en écoute sur un canal du protocol LoRa. 
@@ -107,7 +105,7 @@ ATMega328p       Capteurs
                  |_>   ! _ INTERUPTION SUR LE pASSAGE A L'ETAT HAUT _ ! 
 
                    Ky-015(Temperature & humidite)
- 5(D5)          <----> entrée Digitale ( envoie une tramme de 5 byte donnat                 les mesures + checksum ) 
+ 5(D5)      <----> entrée Digitale ( envoie une tramme de 5 byte donnat                 les mesures + checksum ) 
 
                     Ky-06(Buzzer)
 A1          <----> Sortie Analogique 
@@ -183,7 +181,7 @@ Le reste des byte est à 0
 ### Les méthodes 
 
 ####  void flame_detected() 
-Méthode appelée lors d'une interuption sur la pin _D2_ . 
+Méthode appelée lors d'une **interuption sur la pinD2**_ . 
 L'etat d'alerte est déclaré ```bool b_Alerte = true``` 
 
 ####  void buildFrame(bool auth = false) 
@@ -245,8 +243,23 @@ boucle
     FIN
 ```
 
+### void Alarme ()
+
+FOnctions permettant l'emission d'un signal sonore lorsque le module est en état d'alerte. 
+Le buzzer est analogique, on evoie deux tonalités avec deux fréquences.
+
+### void void afficheMesure()
+
+Fonction d'affichage sur le Serial formaté des dernières mesures sous la forme :mesures 
+```
+Appareil : 1Etat d'alerte : non---------
+Mesures (possibilité d'erreur :non
+  |_> Humiditée : 0,0%
+  |_> Temperature : 0,0°
+  |_> Spectre infrarouge : 18%
 
 
+```
 ## Le module recepteur : Receiver/ Rx 
 
 ## Le fonctions communes à Tx/Rx: envoie & reception de trames 

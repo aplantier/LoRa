@@ -1,0 +1,93 @@
+.TH "Sender_LoRa/miscTx.h" 3 "Fri Nov 6 2020" "My Project" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Sender_LoRa/miscTx.h
+.SH SYNOPSIS
+.br
+.PP
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "void \fBalarme\fP ()"
+.br
+.RI "Signal d'alerte audio\&. "
+.ti -1c
+.RI "void \fBafficheMesure\fP ()"
+.br
+.RI "Fonction d'affichage des dernières mesures\&. "
+.in -1c
+.SH "Function Documentation"
+.PP 
+.SS "void afficheMesure ()"
+
+.PP
+Fonction d'affichage des dernières mesures\&. 
+.PP
+Definition at line 42 of file miscTx\&.h\&.
+.PP
+.nf
+42                     {
+43 
+44   Serial\&.print("Appareil : ");
+45   Serial\&.print(idTx);
+46   Serial\&.print("Etat d'alerte : ");
+47   Serial\&.print(buffer[1]?"oui":"non");
+48   Serial\&.print("---------\nMesures (possibilité d'erreur :");
+49   Serial\&.print(buffer[2]?"oui":"non");
+50   Serial\&.print("\n\t|_> Humiditée : ");
+51   Serial\&.print(buffer[3],DEC);
+52   Serial\&.print(",");
+53   Serial\&.print(buffer[4],DEC);
+54 
+55   Serial\&.print("%\n\t|_> Temperature : ");
+56   Serial\&.print(buffer[5],DEC);
+57   Serial\&.print(",");
+58   Serial\&.print(buffer[6],DEC);
+59 
+60   Serial\&.print("°\n\t|_> Spectre infrarouge : ");
+61   Serial\&.print(buffer[7],DEC);
+62   Serial\&.println("%");
+63 }
+.fi
+.SS "void alarme ()"
+
+.PP
+Signal d'alerte audio\&. Antoine PLANTIER 
+.SH "Projet Lora"
+.PP
+Fonctions diverses pour Tx
+.PP
+[long description] 
+.PP
+Definition at line 14 of file miscTx\&.h\&.
+.PP
+.nf
+14               {
+15   
+16   Serial\&.println("Alerte Incendie !");
+17   
+18   unsigned char i;
+19   for (i = 0; i < 50; i++)
+20   {
+21     digitalWrite (a_buzzer, HIGH) ;
+22     delay (1) ;
+23     digitalWrite (a_buzzer, LOW) ;
+24     delay (1) ;
+25   }
+26   //Frequency 2
+27   for (i = 0; i < 100; i++)
+28   {
+29     digitalWrite (a_buzzer, HIGH) ;
+30     delay (2) ;
+31     digitalWrite (a_buzzer, LOW) ;
+32     delay (2) ;
+33   }
+34 
+35   
+36 }
+.fi
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for My Project from the source code\&.

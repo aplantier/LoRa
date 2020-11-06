@@ -36,7 +36,6 @@ void sendFrame(byte * a_frame, int a_frameSize) {
     LoRa.print(';');
   }
   LoRa.endPacket();
-  LoRa.sleep();
   return;
 
 }
@@ -75,7 +74,7 @@ bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize) 
     } else bytesDataCount++;
   }
   Serial.print("--- [ Reception trame: ");
-  printFrame(buffer, cursor);
+  printFrame(a_outputFrame, cursor);
   return true;
 
 }

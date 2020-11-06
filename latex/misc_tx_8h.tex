@@ -1,0 +1,96 @@
+\hypertarget{misc_tx_8h}{}\doxysection{Sender\+\_\+\+Lo\+Ra/misc\+Tx.h File Reference}
+\label{misc_tx_8h}\index{Sender\_LoRa/miscTx.h@{Sender\_LoRa/miscTx.h}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{misc_tx_8h_a7b4441ad474e413e4a6269372f05d287}{alarme}} ()
+\begin{DoxyCompactList}\small\item\em Signal d\textquotesingle{}alerte audio. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{misc_tx_8h_a5f930dcf66cacdd91b0e74f50fa64d37}{affiche\+Mesure}} ()
+\begin{DoxyCompactList}\small\item\em Fonction d\textquotesingle{}affichage des dernières mesures. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{misc_tx_8h_a5f930dcf66cacdd91b0e74f50fa64d37}\label{misc_tx_8h_a5f930dcf66cacdd91b0e74f50fa64d37}} 
+\index{miscTx.h@{miscTx.h}!afficheMesure@{afficheMesure}}
+\index{afficheMesure@{afficheMesure}!miscTx.h@{miscTx.h}}
+\doxysubsubsection{\texorpdfstring{afficheMesure()}{afficheMesure()}}
+{\footnotesize\ttfamily void affiche\+Mesure (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Fonction d\textquotesingle{}affichage des dernières mesures. 
+
+
+
+Definition at line 42 of file misc\+Tx.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{42                     \{}
+\DoxyCodeLine{43 }
+\DoxyCodeLine{44   Serial.print(\textcolor{stringliteral}{"Appareil : "});}
+\DoxyCodeLine{45   Serial.print(idTx);}
+\DoxyCodeLine{46   Serial.print(\textcolor{stringliteral}{"Etat d'alerte : "});}
+\DoxyCodeLine{47   Serial.print(buffer[1]?\textcolor{stringliteral}{"oui"}:\textcolor{stringliteral}{"non"});}
+\DoxyCodeLine{48   Serial.print(\textcolor{stringliteral}{"-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)nMesures (possibilité d'erreur :"});}
+\DoxyCodeLine{49   Serial.print(buffer[2]?\textcolor{stringliteral}{"oui"}:\textcolor{stringliteral}{"non"});}
+\DoxyCodeLine{50   Serial.print(\textcolor{stringliteral}{"\(\backslash\)n\(\backslash\)t|\_> Humiditée : "});}
+\DoxyCodeLine{51   Serial.print(buffer[3],DEC);}
+\DoxyCodeLine{52   Serial.print(\textcolor{stringliteral}{","});}
+\DoxyCodeLine{53   Serial.print(buffer[4],DEC);}
+\DoxyCodeLine{54 }
+\DoxyCodeLine{55   Serial.print(\textcolor{stringliteral}{"\%\(\backslash\)n\(\backslash\)t|\_> Temperature : "});}
+\DoxyCodeLine{56   Serial.print(buffer[5],DEC);}
+\DoxyCodeLine{57   Serial.print(\textcolor{stringliteral}{","});}
+\DoxyCodeLine{58   Serial.print(buffer[6],DEC);}
+\DoxyCodeLine{59 }
+\DoxyCodeLine{60   Serial.print(\textcolor{stringliteral}{"°\(\backslash\)n\(\backslash\)t|\_> Spectre infrarouge : "});}
+\DoxyCodeLine{61   Serial.print(buffer[7],DEC);}
+\DoxyCodeLine{62   Serial.println(\textcolor{stringliteral}{"\%"});}
+\DoxyCodeLine{63 \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{misc_tx_8h_a7b4441ad474e413e4a6269372f05d287}\label{misc_tx_8h_a7b4441ad474e413e4a6269372f05d287}} 
+\index{miscTx.h@{miscTx.h}!alarme@{alarme}}
+\index{alarme@{alarme}!miscTx.h@{miscTx.h}}
+\doxysubsubsection{\texorpdfstring{alarme()}{alarme()}}
+{\footnotesize\ttfamily void alarme (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Signal d\textquotesingle{}alerte audio. 
+
+Antoine P\+L\+A\+N\+T\+I\+ER \hypertarget{misc_tx_8h_autotoc_md32}{}\doxysubsection{Projet Lora}\label{misc_tx_8h_autotoc_md32}
+Fonctions diverses pour Tx
+
+\mbox{[}long description\mbox{]} 
+
+Definition at line 14 of file misc\+Tx.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{14               \{}
+\DoxyCodeLine{15   }
+\DoxyCodeLine{16   Serial.println(\textcolor{stringliteral}{"Alerte Incendie !"});}
+\DoxyCodeLine{17   }
+\DoxyCodeLine{18   \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{char} i;}
+\DoxyCodeLine{19   \textcolor{keywordflow}{for} (i = 0; i < 50; i++)}
+\DoxyCodeLine{20   \{}
+\DoxyCodeLine{21     digitalWrite (a\_buzzer, HIGH) ;}
+\DoxyCodeLine{22     delay (1) ;}
+\DoxyCodeLine{23     digitalWrite (a\_buzzer, LOW) ;}
+\DoxyCodeLine{24     delay (1) ;}
+\DoxyCodeLine{25   \}}
+\DoxyCodeLine{26   \textcolor{comment}{//Frequency 2}}
+\DoxyCodeLine{27   \textcolor{keywordflow}{for} (i = 0; i < 100; i++)}
+\DoxyCodeLine{28   \{}
+\DoxyCodeLine{29     digitalWrite (a\_buzzer, HIGH) ;}
+\DoxyCodeLine{30     delay (2) ;}
+\DoxyCodeLine{31     digitalWrite (a\_buzzer, LOW) ;}
+\DoxyCodeLine{32     delay (2) ;}
+\DoxyCodeLine{33   \}}
+\DoxyCodeLine{34 }
+\DoxyCodeLine{35   }
+\DoxyCodeLine{36 \}}
+
+\end{DoxyCode}

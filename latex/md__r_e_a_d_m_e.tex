@@ -1,0 +1,230 @@
+Antoine P\+L\+A\+N\+T\+I\+ER LP S\+I\+GD I\+O\+T\+IA \hypertarget{md__r_e_a_d_m_e_autotoc_md1}{}\doxysubsection{Module Objets Conectés}\label{md__r_e_a_d_m_e_autotoc_md1}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md2}{}\doxysection{Projet d\textquotesingle{}\+Objets Conectés \+: Réseau de capteurs Communication Lo\+Ra}\label{md__r_e_a_d_m_e_autotoc_md2}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md3}{}\doxysubsection{Introduction}\label{md__r_e_a_d_m_e_autotoc_md3}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md4}{}\doxysubsubsection{Résumé}\label{md__r_e_a_d_m_e_autotoc_md4}
+Dans le cadre du Module d\textquotesingle{}objets conectés, nous avions a faire un projet metant en oeuvre le protocole de communication {\bfseries{Lo\+Ra}}. J\textquotesingle{}ai choisis de mettre en place un réseau de communication assurant un relevé de mesures et leurs utilisations dans un programe python.
+
+Le projet consiste en un noeud collecteur \+\_\+(Rx/receviver)\+\_\+ qui receptionne les données envoyées par différents noeuds emeteurs \+\_\+(Tx/sender)\+\_\+. Ces données sont traitées et stoquées par un programme en python. Celui ci offre différentes actions de traitement et d\textquotesingle{}interactions.\hypertarget{md__r_e_a_d_m_e_autotoc_md5}{}\doxysubsubsection{Materiel}\label{md__r_e_a_d_m_e_autotoc_md5}
+Pour ce projet nous travaillons avec des arduino intégrant des modules {\bfseries{Lo\+Ra}}
+
+\href{https://github.com/FabienFerrero/UCA_Board}{\texttt{ Cf Page Web du module}}
+\begin{DoxyItemize}
+\item Les Modules Arduino utilisés \href{https://www.arduino.cc/en/uploads/Main/Arduino-Pro-Mini-schematic.pdf}{\texttt{ https\+://www.\+arduino.\+cc/en/uploads/\+Main/\+Arduino-\/\+Pro-\/\+Mini-\/schematic.\+pdf}} \href{https://cdn.sparkfun.com/assets/c/6/2/2/1/ProMini8MHzv2.pdf}{\texttt{ https\+://cdn.\+sparkfun.\+com/assets/c/6/2/2/1/\+Pro\+Mini8\+M\+Hzv2.\+pdf}}
+\end{DoxyItemize}
+
+Nous utilison également des capteurs \+:
+
+
+\begin{DoxyItemize}
+\item ky-\/015 temperature \& humidite
+\end{DoxyItemize}
+
+\href{https://tkkrlab.nl/wiki/Arduino_KY-015_Temperature_and_humidity_sensor_module}{\texttt{ https\+://tkkrlab.\+nl/wiki/\+Arduino\+\_\+\+K\+Y-\/015\+\_\+\+Temperature\+\_\+and\+\_\+humidity\+\_\+sensor\+\_\+module}} \href{https://arduinomodules.info/ky-015-temperature-humidity-sensor-module/}{\texttt{ https\+://arduinomodules.\+info/ky-\/015-\/temperature-\/humidity-\/sensor-\/module/}}
+
+
+\begin{DoxyItemize}
+\item ky-\/026 detecteur de flamme
+\end{DoxyItemize}
+
+Voltage \+: 3.\+3 -\/ 5.\+5V Spectre infrarouge détecté \+: 760 nm to 1100 nm
+
+\href{https://arduinomodules.info/ky-026-flame-sensor-module/}{\texttt{ https\+://arduinomodules.\+info/ky-\/026-\/flame-\/sensor-\/module/}} \href{https://www.thegeekpub.com/wiki/sensor-wiki-ky-026-flame-ir-sensor/}{\texttt{ https\+://www.\+thegeekpub.\+com/wiki/sensor-\/wiki-\/ky-\/026-\/flame-\/ir-\/sensor/}} \href{https://www.arduinoforbeginners.com/ky-026-arduino-flame-ir-sensor/}{\texttt{ https\+://www.\+arduinoforbeginners.\+com/ky-\/026-\/arduino-\/flame-\/ir-\/sensor/}}\hypertarget{md__r_e_a_d_m_e_autotoc_md6}{}\doxysubsubsection{Langages}\label{md__r_e_a_d_m_e_autotoc_md6}
+
+\begin{DoxyItemize}
+\item C
+\item Python
+\item S\+QL
+\end{DoxyItemize}\hypertarget{md__r_e_a_d_m_e_autotoc_md7}{}\doxysubsection{Fonctionnement général}\label{md__r_e_a_d_m_e_autotoc_md7}
+Le module Recepteur {\bfseries{Rx/receiver}} est conecté par le port série à l\textquotesingle{}ordinateur sur lequel tourne le programme en python.
+
+Le module recepteur {\bfseries{\mbox{\hyperlink{struct_rx}{Rx}}}} est en écoute sur un canal du protocol Lo\+Ra. Lorsque un module emetteur {\bfseries{Tx}} se connecte sur un canal, il s\textquotesingle{}authentifie auprès de {\bfseries{\mbox{\hyperlink{struct_rx}{Rx}}}}, dès lors, il peut lui envoyer les données qu\textquotesingle{}il collecte avec ses capteurs.
+
+Ces données sont traitées par le software pour pouvoir les exploiter\+: elles sont datées, structurée et stockées. Le software permet par exemple de voir un graphique de l\textquotesingle{}évolution de la temperature actualisé dynamiquement, ou encore de faire des calculs \+: moyenne glissante, moyenne par jours ... etc
+
+Il existe également un mode d\textquotesingle{}urgence. Si un des modules ky-\/026 détecte une flamme, une interuption est générée sur le module émetteur qui se met donc en état d\textquotesingle{}alerte. la fréquence d\textquotesingle{}envoi des tramme est accéléré pour évaluer le danger, une alarme se met à sonner sur {\bfseries{Tx}} et {\bfseries{\mbox{\hyperlink{struct_rx}{Rx}}}} et un email est envoyé pour avertir du dangers.
+
+Voici le schéma général du projet.
+
+\hypertarget{md__r_e_a_d_m_e_autotoc_md8}{}\doxysubsection{Configuration Lo\+Ra des modules}\label{md__r_e_a_d_m_e_autotoc_md8}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{ \{c++\}}
+\DoxyCodeLine{LoRa.begin(915E6); // parametre réseau pour l'europe }
+\DoxyCodeLine{LoRa.setTxPower(txPo, 1);// puissance d'émission à 20 ; la pin de sortie de l'emeteur}
+\DoxyCodeLine{LoRa.setSpreadingFactor(spFa); // le sf ici gardé a 12}
+\DoxyCodeLine{LoRa.setSignalBandwidth(baWi);// bande passante du signal 125E3}
+\DoxyCodeLine{LoRa.setPreambleLength(prLe); // la longueur du preambules}
+\DoxyCodeLine{LoRa.setSyncWord(CANAL);// le canal de communication ici 0xA2}
+\DoxyCodeLine{LoRa.enableCrc(); //activation du crc}
+\end{DoxyCode}
+
+
+Pins utilisés par le module Lo\+Ra
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{ATMega328p       LoRa RFM95W }
+\DoxyCodeLine{                   Module}
+\DoxyCodeLine{ D8          <-\/-\/-\/-\/> RST}
+\DoxyCodeLine{ MISO  (D12) <-\/-\/-\/-\/> MISO}
+\DoxyCodeLine{ MOSI  (D11) <-\/-\/-\/-\/> MOSI}
+\DoxyCodeLine{ SCK   (D13) <-\/-\/-\/-\/> CLK}
+\DoxyCodeLine{ SS    (D10) <-\/-\/-\/-\/> SEL (Chip Select)}
+\DoxyCodeLine{ D3          <-\/-\/-\/-\/> DIO0}
+\DoxyCodeLine{ D7          <-\/-\/-\/-\/> DIO1}
+\DoxyCodeLine{ D6          <-\/-\/-\/-\/> DIO2}
+\DoxyCodeLine{ 3.3V        <-\/-\/-\/-\/> Vcc}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md9}{}\doxysubsection{Les modules Emeteurs \+: Sender/ TX}\label{md__r_e_a_d_m_e_autotoc_md9}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md10}{}\doxysubsubsection{Les pins utilisées pour les capteurs \+:}\label{md__r_e_a_d_m_e_autotoc_md10}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{ATMega328p       Capteurs}
+\DoxyCodeLine{}
+\DoxyCodeLine{                   Ky-\/026(flamme)}
+\DoxyCodeLine{ A0          <-\/-\/-\/-\/> entrée analogique ( Out [0;1024] )}
+\DoxyCodeLine{ 2(D2)       <-\/-\/-\/-\/> entrée Digitale ( etat haut quand flamme détectée )}
+\DoxyCodeLine{                 |     vecteur 1 }
+\DoxyCodeLine{                 |\_>   ! \_ INTERUPTION SUR LE pASSAGE A L'ETAT HAUT \_ ! }
+\DoxyCodeLine{}
+\DoxyCodeLine{                   Ky-\/015(Temperature \& humidite)}
+\DoxyCodeLine{ 5(D5)      <-\/-\/-\/-\/> entrée Digitale ( envoie une tramme de 5 byte donnat                 les mesures + checksum ) }
+\DoxyCodeLine{}
+\DoxyCodeLine{                    Ky-\/06(Buzzer)}
+\DoxyCodeLine{A1          <-\/-\/-\/-\/> Sortie Analogique }
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md11}{}\doxysubsubsection{Les variables}\label{md__r_e_a_d_m_e_autotoc_md11}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{// ** Variables globales }
+\DoxyCodeLine{static int i\_periode = 5000; // Temps du cycle }
+\DoxyCodeLine{static int i\_AlertePeriode = 500; // Temps du cycle en periode d'alerte}
+\DoxyCodeLine{static bool b\_Alerte = false; // Detection du feu : true }
+\DoxyCodeLine{byte humTmp[5]; // tableau de stockage des mesures Humidite \& temperature}
+\DoxyCodeLine{byte idTx; //identifiant de l'appareil s'il nest pas enregistré dans tx =0 }
+\DoxyCodeLine{byte randNumber; // variable pour stocker une clée générrée aléatoirement avec random() }
+\DoxyCodeLine{\#define FRAMESIZE 10 // taille de la framme }
+\DoxyCodeLine{byte buffer[FRAMESIZE] = \{ // buffer de communication pour les données}
+\DoxyCodeLine{  0}
+\DoxyCodeLine{\};}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md12}{}\doxysubsubsection{les trammes}\label{md__r_e_a_d_m_e_autotoc_md12}
+{\bfseries{Tx}} envoie deux types de trammes, chaques trammes a une taille fixe de 10 bytes lorsque ces trammes seront envoyées via le protocole Lo\+Ra, chaque bytes de ces trammes seront séparés par un bytes contenant $\ast$$\ast$\char`\"{};\char`\"{}$\ast$$\ast$ en guise de séparateur de données.
+
+Attention, les donnée son envoyées Bytes après Bytes par le protocole Lo\+Ra mais un chiffre a plusieurs unités n\textquotesingle{}est pas encodé sur un seul byte.
+
+Ex\+: 123, devient 1, 2 , 3.
+
+De plus un nombre négatif est casté avec un décalage
+
+Ex \+: -\/11 devient 245( 256 -\/ 11 ) et donc 2, 4, 5\hypertarget{md__r_e_a_d_m_e_autotoc_md13}{}\doxyparagraph{Tramme de mesures}\label{md__r_e_a_d_m_e_autotoc_md13}
+Parlons en détail de {\bfseries{buffer}} et {\bfseries{F\+R\+A\+M\+E\+S\+I\+ZE}} \+: buffer contient la trame type envoyée via le protocole Lo\+Ra et contenant les données mesurées par Tx. Sa taille est fixée ({\bfseries{F\+R\+A\+M\+E\+S\+I\+ZE}}) les mesures décimales ont une précision de E-\/2 fixe.
+
+A savoir que le {\bfseries{Lo\+Ra}} transmet les trames bytes après bytes ( non-\/signés ). Le choix de trame que j\textquotesingle{}ai choisis est le suivant
+
+
+
+
+\begin{DoxyItemize}
+\item {\bfseries{Id\+Tx}} identifiant de l\textquotesingle{}appareil O quand non identifié
+\item {\bfseries{Etat}} Etat de l\textquotesingle{}appareil (normal/urgence-\/$>$ feu)
+\item {\bfseries{erreur}} Le capteur Temp\+Hum peut avoir des ratés cependant les valeures sont soouvent cohérente. J\textquotesingle{}ai décidé de les garder a chaque fois avec ce code d\textquotesingle{}erreur qui me permettra de faire un post traitement sur ces données
+\item {\bfseries{Humidité}} sur 2 bytes le premier pour la partie entière la seconde pour la partie decimale
+\item {\bfseries{Température}} sur 2 bytes le premier pour la partie entière la seconde pour la partie decimale
+\item {\bfseries{Rayonnement infrarouge}} en \%, plus le seuil est haut plus le rayonnement est fort
+\item {\bfseries{Checksum}} somme des valeurs de la tramme dans un byte non signé
+\item {\bfseries{byte de fin de ligne}}
+\end{DoxyItemize}\hypertarget{md__r_e_a_d_m_e_autotoc_md14}{}\doxyparagraph{Tramme d\textquotesingle{}authentification}\label{md__r_e_a_d_m_e_autotoc_md14}
+Lorsque l\textquotesingle{}appareil n\textquotesingle{}est pas identifié, envoie une trame d\textquotesingle{}authentification.
+
+
+\begin{DoxyItemize}
+\item {\bfseries{Id\+Tx}} identifiant de l\textquotesingle{}appareil O car non identifié. C\textquotesingle{}est ce qui lancera la procédure d\textquotesingle{}authentification auprès de \mbox{\hyperlink{struct_rx}{Rx}}
+\item {\bfseries{Key/rand\+Number}} byte aléatoire générée avec random(125)
+\item {\bfseries{Checksum}} somme des valeurs de la tramme dans un byte non signé
+\item {\bfseries{byte de fin de ligne}}
+\end{DoxyItemize}
+
+Le reste des byte est à 0\hypertarget{md__r_e_a_d_m_e_autotoc_md15}{}\doxysubsubsection{Les méthodes}\label{md__r_e_a_d_m_e_autotoc_md15}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md16}{}\doxyparagraph{void flame\+\_\+detected()}\label{md__r_e_a_d_m_e_autotoc_md16}
+Méthode appelée lors d\textquotesingle{}une {\bfseries{interuption sur la pin\+D2}}\+\_\+ . L\textquotesingle{}etat d\textquotesingle{}alerte est déclaré {\ttfamily bool b\+\_\+\+Alerte = true}\hypertarget{md__r_e_a_d_m_e_autotoc_md17}{}\doxyparagraph{void build\+Frame(bool auth = false)}\label{md__r_e_a_d_m_e_autotoc_md17}
+Méthode construction des trammes à envoyer. Ces tramme sont construite dans le buffer.
+
+l\textquotesingle{}argument permet de choisir quelle tramme construire.
+
+Cette fonction appelle les methodes permettant d\textquotesingle{}efectuer les mesures. (cf {\itshape hum\+Tmp()} dans hum\+Tmp.\+h)\hypertarget{md__r_e_a_d_m_e_autotoc_md18}{}\doxyparagraph{void enregistrement\+Rx()}\label{md__r_e_a_d_m_e_autotoc_md18}
+Cette methode permet de s\textquotesingle{}authentifier auprès de \mbox{\hyperlink{struct_rx}{Rx}}. L\textquotesingle{}algo est le suivant\+:
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{PRE CONDITIONS : }
+\DoxyCodeLine{Pas déja identifié -\/> idTx=0 }
+\DoxyCodeLine{LoRa en mode emission}
+\DoxyCodeLine{-\/-\/-\/-\/-\/}
+\DoxyCodeLine{DEBUT}
+\DoxyCodeLine{}
+\DoxyCodeLine{key <-\/= une clé aléatoire}
+\DoxyCodeLine{trame <-\/= format Trame authentification utilisant key}
+\DoxyCodeLine{envoie (trame)}
+\DoxyCodeLine{}
+\DoxyCodeLine{passe en mode reception }
+\DoxyCodeLine{}
+\DoxyCodeLine{tentative <-\/= 10 }
+\DoxyCodeLine{timeout <-\/= 250 }
+\DoxyCodeLine{}
+\DoxyCodeLine{boucle : tant que le nombre de t'entative >0 AND timeaout !=0 }
+\DoxyCodeLine{        SI Frame Recue ET key ==trame recue [1]}
+\DoxyCodeLine{            idTx <-\/= trame recue [2]}
+\DoxyCodeLine{            FIN}
+\DoxyCodeLine{        SINON tentative -\/-\/ }
+\DoxyCodeLine{    timeout-\/-\/}
+\DoxyCodeLine{AUthentification écouée }
+\DoxyCodeLine{FIN}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md19}{}\doxysubsubsection{void loop()}\label{md__r_e_a_d_m_e_autotoc_md19}
+La methode loop boucle sur l\textquotesingle{}arduino.
+
+en pseudo code
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{boucle }
+\DoxyCodeLine{    Si Etat d'alerte }
+\DoxyCodeLine{        Faire soner l'alarme }
+\DoxyCodeLine{        faire tramme d'alerte}
+\DoxyCodeLine{        Envoyer Tramme d'alerte}
+\DoxyCodeLine{        FIN}
+\DoxyCodeLine{    Si appareil pas encore enregistré}
+\DoxyCodeLine{        enregistrement()}
+\DoxyCodeLine{        FIN}
+\DoxyCodeLine{    Mesures des capteurs}
+\DoxyCodeLine{    Construction de tramme}
+\DoxyCodeLine{    envoi de la trame }
+\DoxyCodeLine{    attendre ( laps de temps)}
+\DoxyCodeLine{    FIN}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md20}{}\doxysubsubsection{void Alarme ()}\label{md__r_e_a_d_m_e_autotoc_md20}
+F\+Onctions permettant l\textquotesingle{}emission d\textquotesingle{}un signal sonore lorsque le module est en état d\textquotesingle{}alerte. Le buzzer est analogique, on evoie deux tonalités avec deux fréquences.\hypertarget{md__r_e_a_d_m_e_autotoc_md21}{}\doxysubsubsection{void void affiche\+Mesure()}\label{md__r_e_a_d_m_e_autotoc_md21}
+Fonction d\textquotesingle{}affichage sur le Serial formaté des dernières mesures sous la forme \+:mesures 
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Appareil : 1Etat d'alerte : non-\/-\/-\/-\/-\/-\/-\/-\/-\/}
+\DoxyCodeLine{Mesures (possibilité d'erreur :non}
+\DoxyCodeLine{  |\_> Humiditée : 0,0\%}
+\DoxyCodeLine{  |\_> Temperature : 0,0°}
+\DoxyCodeLine{  |\_> Spectre infrarouge : 18\%}
+\end{DoxyCode}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md22}{}\doxysubsection{Le module recepteur \+: Receiver/ Rx}\label{md__r_e_a_d_m_e_autotoc_md22}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md23}{}\doxysubsection{Le fonctions communes à Tx/\+Rx\+: envoie \& reception de trames}\label{md__r_e_a_d_m_e_autotoc_md23}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md24}{}\doxysubsection{Le Software en python}\label{md__r_e_a_d_m_e_autotoc_md24}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md25}{}\doxysubsection{liens Utiles}\label{md__r_e_a_d_m_e_autotoc_md25}
+\hypertarget{md__r_e_a_d_m_e_autotoc_md26}{}\doxysection{T\+O\+O\+O\+O\+O\+D\+O\+O\+O\+O\+O\+O\+O\+O\+O\+O\+O\+O\+O\+O\+O\+OO}\label{md__r_e_a_d_m_e_autotoc_md26}
+
+\begin{DoxyItemize}
+\item Finir redaction
+\item check icrem id register in reeiver
+\item Faire Code python pour récupérer data + qualité transmition
+\item voir pour du sql pour la bdd ?
+\item plot , moyenne glissante, envoie mail
+\item ajouter la posibilité de détecter une alerte incendie même pour un noeud non identifié
+\item compte du nombre de framme recu par chaques Tx + moyenne reception 
+\end{DoxyItemize}

@@ -1,0 +1,104 @@
+.TH "Sender_LoRa/humTemp.h" 3 "Fri Nov 6 2020" "My Project" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Sender_LoRa/humTemp.h
+.SH SYNOPSIS
+.br
+.PP
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "byte \fBread_data\fP ()"
+.br
+.ti -1c
+.RI "void \fBprobe_humTemp\fP ()"
+.br
+.ti -1c
+.RI "bool \fBhumTemp\fP ()"
+.br
+.RI "Fonction de mesure de la temperature et stockage dans le tableau global humTmp\&. "
+.in -1c
+.SH "Function Documentation"
+.PP 
+.SS "bool humTemp ()"
+
+.PP
+Fonction de mesure de la temperature et stockage dans le tableau global humTmp\&. [long description] 
+.PP
+\fBReturns\fP
+.RS 4
+true si tout s'est bien passé 
+.RE
+.PP
+
+.PP
+Definition at line 20 of file humTemp\&.h\&.
+.PP
+.nf
+20                {
+21 
+22   probe_humTemp(); // mesure
+23 
+24   byte checksum = humTmp[0] + humTmp[1] + humTmp[2] + humTmp[3];
+25 
+26   if (humTmp[4] != checksum)
+27     return false;
+28 
+29   return true;
+30 }
+.fi
+.SS "void probe_humTemp ()"
+
+.PP
+Definition at line 45 of file humTemp\&.h\&.
+.PP
+.nf
+45                      {
+46   digitalWrite(d_tempHum, LOW); //Etat bas au bus pour initier signal => debut mesure de la sonde 
+47   delay(40); //un peu de temps pour laisser la sonde mesurer 
+48 
+49   digitalWrite(d_tempHum, HIGH); // Etat haut pour initier l'envoi des datas 
+50   delayMicroseconds(40); //Wait for DHT11 to respond
+51 
+52   pinMode(d_tempHum, INPUT); // on passe en mode reception 
+53   while (digitalRead(d_tempHum) == HIGH); // reception etat bas debut de trans;ition 
+54   delayMicroseconds(80); //The DHT11 responds by pulling the bus low for 80us;
+55 
+56   if (digitalRead(d_tempHum) == LOW)
+57     delayMicroseconds(80); //
+58   for (int i = 0; i < 5; i++)
+59     humTmp[i] = read_data();
+60   pinMode(d_tempHum, OUTPUT); // fin de reception, sonde desactivee
+61   digitalWrite(d_tempHum, HIGH); //After the completion of a release of data bus, waiting for the host to start the next signal
+62 
+63 }
+.fi
+.SS "byte read_data ()"
+Antoine PLANTIER 
+.SH "Projet Lora"
+.PP
+Fonctions gèrant le capteur d'humidite et de temperature
+.PP
+Vu la librairie DHT https://github.com/adafruit/DHT-sensor-library Ne fonctionne pas parfaitement et contre productif pour récuperer les valeurs en char* 
+.PP
+Definition at line 32 of file humTemp\&.h\&.
+.PP
+.nf
+32                  {
+33   byte i = 0;
+34   byte result = 0;
+35   for (i = 0; i < 8; i++) {
+36     while (digitalRead(d_tempHum) == LOW); // debut de la transmission par un etat bas
+37     delayMicroseconds(30); //laisser le temps de changement de bit
+38     if (digitalRead(d_tempHum) == HIGH)
+39       result |= (1 << (8 - i)); //High in the former, low in the post
+40     while (digitalRead(d_tempHum) == HIGH); //d_tempHumhumTmpa '1', waiting for the next bit of reception
+41   }
+42   return result;
+43 }
+.fi
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for My Project from the source code\&.

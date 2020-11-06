@@ -1,0 +1,108 @@
+\hypertarget{hum_temp_8h}{}\doxysection{Sender\+\_\+\+Lo\+Ra/hum\+Temp.h File Reference}
+\label{hum_temp_8h}\index{Sender\_LoRa/humTemp.h@{Sender\_LoRa/humTemp.h}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+byte \mbox{\hyperlink{hum_temp_8h_a67863de38efa576fada8c5dee333a512}{read\+\_\+data}} ()
+\item 
+void \mbox{\hyperlink{hum_temp_8h_a0465388713b053a3d833006f29eba630}{probe\+\_\+hum\+Temp}} ()
+\item 
+bool \mbox{\hyperlink{hum_temp_8h_a8b60e044ce81906e942558636c4c9689}{hum\+Temp}} ()
+\begin{DoxyCompactList}\small\item\em Fonction de mesure de la temperature et stockage dans le tableau global hum\+Tmp. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{hum_temp_8h_a8b60e044ce81906e942558636c4c9689}\label{hum_temp_8h_a8b60e044ce81906e942558636c4c9689}} 
+\index{humTemp.h@{humTemp.h}!humTemp@{humTemp}}
+\index{humTemp@{humTemp}!humTemp.h@{humTemp.h}}
+\doxysubsubsection{\texorpdfstring{humTemp()}{humTemp()}}
+{\footnotesize\ttfamily bool hum\+Temp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Fonction de mesure de la temperature et stockage dans le tableau global hum\+Tmp. 
+
+\mbox{[}long description\mbox{]} \begin{DoxyReturn}{Returns}
+true si tout s\textquotesingle{}est bien passé 
+\end{DoxyReturn}
+
+
+Definition at line 20 of file hum\+Temp.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{20                \{}
+\DoxyCodeLine{21 }
+\DoxyCodeLine{22   \mbox{\hyperlink{hum_temp_8h_a0465388713b053a3d833006f29eba630}{probe\_humTemp}}(); \textcolor{comment}{// mesure}}
+\DoxyCodeLine{23 }
+\DoxyCodeLine{24   \textcolor{keywordtype}{byte} checksum = humTmp[0] + humTmp[1] + humTmp[2] + humTmp[3];}
+\DoxyCodeLine{25 }
+\DoxyCodeLine{26   \textcolor{keywordflow}{if} (humTmp[4] != checksum)}
+\DoxyCodeLine{27     \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{28 }
+\DoxyCodeLine{29   \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{30 \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{hum_temp_8h_a0465388713b053a3d833006f29eba630}\label{hum_temp_8h_a0465388713b053a3d833006f29eba630}} 
+\index{humTemp.h@{humTemp.h}!probe\_humTemp@{probe\_humTemp}}
+\index{probe\_humTemp@{probe\_humTemp}!humTemp.h@{humTemp.h}}
+\doxysubsubsection{\texorpdfstring{probe\_humTemp()}{probe\_humTemp()}}
+{\footnotesize\ttfamily void probe\+\_\+hum\+Temp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 45 of file hum\+Temp.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{45                      \{}
+\DoxyCodeLine{46   digitalWrite(d\_tempHum, LOW); \textcolor{comment}{//Etat bas au bus pour initier signal => debut mesure de la sonde }}
+\DoxyCodeLine{47   delay(40); \textcolor{comment}{//un peu de temps pour laisser la sonde mesurer }}
+\DoxyCodeLine{48 }
+\DoxyCodeLine{49   digitalWrite(d\_tempHum, HIGH); \textcolor{comment}{// Etat haut pour initier l'envoi des datas }}
+\DoxyCodeLine{50   delayMicroseconds(40); \textcolor{comment}{//Wait for DHT11 to respond}}
+\DoxyCodeLine{51 }
+\DoxyCodeLine{52   pinMode(d\_tempHum, INPUT); \textcolor{comment}{// on passe en mode reception }}
+\DoxyCodeLine{53   \textcolor{keywordflow}{while} (digitalRead(d\_tempHum) == HIGH); \textcolor{comment}{// reception etat bas debut de trans;ition }}
+\DoxyCodeLine{54   delayMicroseconds(80); \textcolor{comment}{//The DHT11 responds by pulling the bus low for 80us;}}
+\DoxyCodeLine{55 }
+\DoxyCodeLine{56   \textcolor{keywordflow}{if} (digitalRead(d\_tempHum) == LOW)}
+\DoxyCodeLine{57     delayMicroseconds(80); \textcolor{comment}{//}}
+\DoxyCodeLine{58   \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i = 0; i < 5; i++)}
+\DoxyCodeLine{59     humTmp[i] = \mbox{\hyperlink{hum_temp_8h_a67863de38efa576fada8c5dee333a512}{read\_data}}();}
+\DoxyCodeLine{60   pinMode(d\_tempHum, OUTPUT); \textcolor{comment}{// fin de reception, sonde desactivee}}
+\DoxyCodeLine{61   digitalWrite(d\_tempHum, HIGH); \textcolor{comment}{//After the completion of a release of data bus, waiting for the host to start the next signal}}
+\DoxyCodeLine{62 }
+\DoxyCodeLine{63 \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{hum_temp_8h_a67863de38efa576fada8c5dee333a512}\label{hum_temp_8h_a67863de38efa576fada8c5dee333a512}} 
+\index{humTemp.h@{humTemp.h}!read\_data@{read\_data}}
+\index{read\_data@{read\_data}!humTemp.h@{humTemp.h}}
+\doxysubsubsection{\texorpdfstring{read\_data()}{read\_data()}}
+{\footnotesize\ttfamily byte read\+\_\+data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Antoine P\+L\+A\+N\+T\+I\+ER \hypertarget{hum_temp_8h_autotoc_md31}{}\doxysubsection{Projet Lora}\label{hum_temp_8h_autotoc_md31}
+Fonctions gèrant le capteur d\textquotesingle{}humidite et de temperature
+
+Vu la librairie D\+HT \href{https://github.com/adafruit/DHT-sensor-library}{\texttt{ https\+://github.\+com/adafruit/\+D\+H\+T-\/sensor-\/library}} Ne fonctionne pas parfaitement et contre productif pour récuperer les valeurs en char$\ast$ 
+
+Definition at line 32 of file hum\+Temp.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{32                  \{}
+\DoxyCodeLine{33   \textcolor{keywordtype}{byte} i = 0;}
+\DoxyCodeLine{34   \textcolor{keywordtype}{byte} result = 0;}
+\DoxyCodeLine{35   \textcolor{keywordflow}{for} (i = 0; i < 8; i++) \{}
+\DoxyCodeLine{36     \textcolor{keywordflow}{while} (digitalRead(d\_tempHum) == LOW); \textcolor{comment}{// debut de la transmission par un etat bas}}
+\DoxyCodeLine{37     delayMicroseconds(30); \textcolor{comment}{//laisser le temps de changement de bit}}
+\DoxyCodeLine{38     \textcolor{keywordflow}{if} (digitalRead(d\_tempHum) == HIGH)}
+\DoxyCodeLine{39       result |= (1 << (8 -\/ i)); \textcolor{comment}{//High in the former, low in the post}}
+\DoxyCodeLine{40     \textcolor{keywordflow}{while} (digitalRead(d\_tempHum) == HIGH); \textcolor{comment}{//d\_tempHumhumTmpa '1', waiting for the next bit of reception}}
+\DoxyCodeLine{41   \}}
+\DoxyCodeLine{42   \textcolor{keywordflow}{return} result;}
+\DoxyCodeLine{43 \}}
+
+\end{DoxyCode}

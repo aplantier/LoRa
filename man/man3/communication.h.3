@@ -1,0 +1,144 @@
+.TH "Sender_LoRa/communication.h" 3 "Fri Nov 6 2020" "My Project" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Sender_LoRa/communication.h
+.SH SYNOPSIS
+.br
+.PP
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "byte \fBbyteTabToByte\fP (byte *a_byteTabToParse, int dataSize)"
+.br
+.RI "Conversion d'une suite de byte en un byte\&. "
+.ti -1c
+.RI "void \fBsendFrame\fP (byte *a_frame, int a_frameSize)"
+.br
+.ti -1c
+.RI "bool \fBgetFramme\fP (byte *a_outputFrame, int a_i_outputFrameSize, int a_i_framSize)"
+.br
+.RI "Fonction de reception de tramme\&. "
+.in -1c
+.SH "Function Documentation"
+.PP 
+.SS "byte byteTabToByte (byte * a_byteTabToParse, int dataSize)"
+
+.PP
+Conversion d'une suite de byte en un byte\&. Antoine PLANTIER 
+.SH "Projet Lora"
+.PP
+Fonctions comunes \fBRx\fP Tx pour la reception et l'envoie de tramme
+.PP
+Le module LoRa décompose les données en byte il faut donc les rassembler
+.PP
+\fBParameters\fP
+.RS 4
+\fIa_byteTabToParse\fP contien les byte a merge 
+.br
+\fIdataSize\fP le nombre d'éléments a merge
+.RE
+.PP
+\fBReturns\fP
+.RS 4
+[description] 
+.RE
+.PP
+
+.PP
+Definition at line 91 of file communication\&.h\&.
+.PP
+.nf
+91                                                           {
+92 
+93   byte zero = (char)
+94   '0';
+95   char result = 0;
+96   int puissance = dataSize - 1;
+97   bool negatif = false; // si un - est dans la chaine (PRE: en tete )
+98   for (int i = 0; i < dataSize; i++) {
+99 
+100     if ( * (a_byteTabToParse + i) == '-') {
+101       negatif = true;
+102       puissance--;
+103       continue;
+104     }
+105     result += (( * (a_byteTabToParse + i) - zero)) * pow(10, puissance--); // on monte en puissance les unités en fction de leurs place
+106   }
+107   return (byte) negatif ? -result : result; // renvoie d'un byte signé  ( char )
+108 }
+.fi
+.SS "bool getFramme (byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize)"
+
+.PP
+Fonction de reception de tramme\&. Fonction d'aquisition d'une frame
+.PP
+Une trame recue est formatée avec des séparateurs ';' le protocole LoRa décompose les données : 123 devient 1, 2 ,3
+.PP
+il faut donc reformater la trame
+.PP
+Pre condition, pas de trame qui commencent par un separateur! 
+.PP
+\fBReturns\fP
+.RS 4
+bool false si erreur dans la lecture de frame 
+.RE
+.PP
+
+.PP
+Definition at line 56 of file communication\&.h\&.
+.PP
+.nf
+56                                                                                 {
+57   if (a_i_framSize == 0) return false;
+58 
+59   int cursor = 0; // curseur de remplissage de la tramme finale
+60 
+61   byte bytesData[5] = {
+62     0
+63   }; // buffer pour les bytes à retraiter  séparés par des séparateurs 
+64   int bytesDataCount = 0; // compteurs du nombres d'unités ( nombre de char entre les séparateurs)
+65 
+66   while (LoRa\&.available()) // tant que de la data est dispo 
+67   {
+68     bytesData[bytesDataCount] = LoRa\&.read();
+69 
+70     if (bytesData[bytesDataCount] == ';') // si separateur
+71     {
+72       a_outputFrame[cursor++] = byteTabToByte(bytesData, bytesDataCount); // transformation du tableau de byte en un char-> stockage dans le buffer
+73       bytesDataCount = 0; // réinitialisation 
+74     } else bytesDataCount++;
+75   }
+76   Serial\&.print("--- [ Reception trame: ");
+77   printFrame(buffer, cursor);
+78   return true;
+79 
+80 }
+.fi
+.SS "void sendFrame (byte * a_frame, int a_frameSize)"
+
+.PP
+Definition at line 26 of file communication\&.h\&.
+.PP
+.nf
+26                                                 {
+27   Serial\&.print("--- [ Envoi trame: ");
+28   printFrame(a_frame, a_frameSize);
+29   LoRa\&.beginPacket();
+30   for (int cursor = 0; cursor < a_frameSize; cursor++) {
+31     if ((char) * (a_frame + cursor) < 0) { // si la data est négative, on evoie le '-' a part 
+32       LoRa\&.print('-');
+33       *(a_frame + cursor) *= -1; // on prends la partie entière
+34     }
+35     LoRa\&.print( * (a_frame + cursor)); // modif 
+36     LoRa\&.print(';');
+37   }
+38   LoRa\&.endPacket();
+39   return;
+40 
+41 }
+.fi
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for My Project from the source code\&.

@@ -1,0 +1,147 @@
+\hypertarget{_sender___lo_ra_2communication_8h}{}\doxysection{Sender\+\_\+\+Lo\+Ra/communication.h File Reference}
+\label{_sender___lo_ra_2communication_8h}\index{Sender\_LoRa/communication.h@{Sender\_LoRa/communication.h}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+byte \mbox{\hyperlink{_sender___lo_ra_2communication_8h_a82e1ddd9875718acdfca9e2def0b4b60}{byte\+Tab\+To\+Byte}} (byte $\ast$a\+\_\+byte\+Tab\+To\+Parse, int data\+Size)
+\begin{DoxyCompactList}\small\item\em Conversion d\textquotesingle{}une suite de byte en un byte. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{_sender___lo_ra_2communication_8h_ac7f07b504b700f190e692bb2bcc56b1f}{send\+Frame}} (byte $\ast$a\+\_\+frame, int a\+\_\+frame\+Size)
+\item 
+bool \mbox{\hyperlink{_sender___lo_ra_2communication_8h_abb5214cda786d66f5e0bb19bdfa1267b}{get\+Framme}} (byte $\ast$a\+\_\+output\+Frame, int a\+\_\+i\+\_\+output\+Frame\+Size, int a\+\_\+i\+\_\+fram\+Size)
+\begin{DoxyCompactList}\small\item\em Fonction de reception de tramme. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{_sender___lo_ra_2communication_8h_a82e1ddd9875718acdfca9e2def0b4b60}\label{_sender___lo_ra_2communication_8h_a82e1ddd9875718acdfca9e2def0b4b60}} 
+\index{communication.h@{communication.h}!byteTabToByte@{byteTabToByte}}
+\index{byteTabToByte@{byteTabToByte}!communication.h@{communication.h}}
+\doxysubsubsection{\texorpdfstring{byteTabToByte()}{byteTabToByte()}}
+{\footnotesize\ttfamily byte byte\+Tab\+To\+Byte (\begin{DoxyParamCaption}\item[{byte $\ast$}]{a\+\_\+byte\+Tab\+To\+Parse,  }\item[{int}]{data\+Size }\end{DoxyParamCaption})}
+
+
+
+Conversion d\textquotesingle{}une suite de byte en un byte. 
+
+Antoine P\+L\+A\+N\+T\+I\+ER \hypertarget{_sender___lo_ra_2communication_8h_autotoc_md29}{}\doxysubsection{Projet Lora}\label{_sender___lo_ra_2communication_8h_autotoc_md29}
+Fonctions comunes \mbox{\hyperlink{struct_rx}{Rx}} Tx pour la reception et l\textquotesingle{}envoie de tramme
+
+Le module Lo\+Ra décompose les données en byte il faut donc les rassembler
+
+
+\begin{DoxyParams}{Parameters}
+{\em a\+\_\+byte\+Tab\+To\+Parse} & contien les byte a merge \\
+\hline
+{\em data\+Size} & le nombre d\textquotesingle{}éléments a merge\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{[}description\mbox{]} 
+\end{DoxyReturn}
+
+
+Definition at line 91 of file communication.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{91                                                           \{}
+\DoxyCodeLine{92 }
+\DoxyCodeLine{93   \textcolor{keywordtype}{byte} zero = (char)}
+\DoxyCodeLine{94   \textcolor{charliteral}{'0'};}
+\DoxyCodeLine{95   \textcolor{keywordtype}{char} result = 0;}
+\DoxyCodeLine{96   \textcolor{keywordtype}{int} puissance = dataSize -\/ 1;}
+\DoxyCodeLine{97   \textcolor{keywordtype}{bool} negatif = \textcolor{keyword}{false}; \textcolor{comment}{// si un -\/ est dans la chaine (PRE: en tete )}}
+\DoxyCodeLine{98   \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} i = 0; i < dataSize; i++) \{}
+\DoxyCodeLine{99 }
+\DoxyCodeLine{100     \textcolor{keywordflow}{if} ( * (a\_byteTabToParse + i) == \textcolor{charliteral}{'-\/'}) \{}
+\DoxyCodeLine{101       negatif = \textcolor{keyword}{true};}
+\DoxyCodeLine{102       puissance-\/-\/;}
+\DoxyCodeLine{103       \textcolor{keywordflow}{continue};}
+\DoxyCodeLine{104     \}}
+\DoxyCodeLine{105     result += (( * (a\_byteTabToParse + i) -\/ zero)) * pow(10, puissance-\/-\/); \textcolor{comment}{// on monte en puissance les unités en fction de leurs place}}
+\DoxyCodeLine{106   \}}
+\DoxyCodeLine{107   \textcolor{keywordflow}{return} (\textcolor{keywordtype}{byte}) negatif ? -\/result : result; \textcolor{comment}{// renvoie d'un byte signé  ( char )}}
+\DoxyCodeLine{108 \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{_sender___lo_ra_2communication_8h_abb5214cda786d66f5e0bb19bdfa1267b}\label{_sender___lo_ra_2communication_8h_abb5214cda786d66f5e0bb19bdfa1267b}} 
+\index{communication.h@{communication.h}!getFramme@{getFramme}}
+\index{getFramme@{getFramme}!communication.h@{communication.h}}
+\doxysubsubsection{\texorpdfstring{getFramme()}{getFramme()}}
+{\footnotesize\ttfamily bool get\+Framme (\begin{DoxyParamCaption}\item[{byte $\ast$}]{a\+\_\+output\+Frame,  }\item[{int}]{a\+\_\+i\+\_\+output\+Frame\+Size,  }\item[{int}]{a\+\_\+i\+\_\+fram\+Size }\end{DoxyParamCaption})}
+
+
+
+Fonction de reception de tramme. 
+
+Fonction d\textquotesingle{}aquisition d\textquotesingle{}une frame
+
+Une trame recue est formatée avec des séparateurs \textquotesingle{};\textquotesingle{} le protocole Lo\+Ra décompose les données \+: 123 devient 1, 2 ,3
+
+il faut donc reformater la trame
+
+Pre condition, pas de trame qui commencent par un separateur! \begin{DoxyReturn}{Returns}
+bool false si erreur dans la lecture de frame 
+\end{DoxyReturn}
+
+
+Definition at line 56 of file communication.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{56                                                                                 \{}
+\DoxyCodeLine{57   \textcolor{keywordflow}{if} (a\_i\_framSize == 0) \textcolor{keywordflow}{return} \textcolor{keyword}{false};}
+\DoxyCodeLine{58 }
+\DoxyCodeLine{59   \textcolor{keywordtype}{int} cursor = 0; \textcolor{comment}{// curseur de remplissage de la tramme finale}}
+\DoxyCodeLine{60 }
+\DoxyCodeLine{61   \textcolor{keywordtype}{byte} bytesData[5] = \{}
+\DoxyCodeLine{62     0}
+\DoxyCodeLine{63   \}; \textcolor{comment}{// buffer pour les bytes à retraiter  séparés par des séparateurs }}
+\DoxyCodeLine{64   \textcolor{keywordtype}{int} bytesDataCount = 0; \textcolor{comment}{// compteurs du nombres d'unités ( nombre de char entre les séparateurs)}}
+\DoxyCodeLine{65 }
+\DoxyCodeLine{66   \textcolor{keywordflow}{while} (LoRa.available()) \textcolor{comment}{// tant que de la data est dispo }}
+\DoxyCodeLine{67   \{}
+\DoxyCodeLine{68     bytesData[bytesDataCount] = LoRa.read();}
+\DoxyCodeLine{69 }
+\DoxyCodeLine{70     \textcolor{keywordflow}{if} (bytesData[bytesDataCount] == \textcolor{charliteral}{';'}) \textcolor{comment}{// si separateur}}
+\DoxyCodeLine{71     \{}
+\DoxyCodeLine{72       a\_outputFrame[cursor++] = \mbox{\hyperlink{communication_8h_a82e1ddd9875718acdfca9e2def0b4b60}{byteTabToByte}}(bytesData, bytesDataCount); \textcolor{comment}{// transformation du tableau de byte en un char-\/> stockage dans le buffer}}
+\DoxyCodeLine{73       bytesDataCount = 0; \textcolor{comment}{// réinitialisation }}
+\DoxyCodeLine{74     \} \textcolor{keywordflow}{else} bytesDataCount++;}
+\DoxyCodeLine{75   \}}
+\DoxyCodeLine{76   Serial.print(\textcolor{stringliteral}{"-\/-\/-\/ [ Reception trame: "});}
+\DoxyCodeLine{77   printFrame(buffer, cursor);}
+\DoxyCodeLine{78   \textcolor{keywordflow}{return} \textcolor{keyword}{true};}
+\DoxyCodeLine{79 }
+\DoxyCodeLine{80 \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{_sender___lo_ra_2communication_8h_ac7f07b504b700f190e692bb2bcc56b1f}\label{_sender___lo_ra_2communication_8h_ac7f07b504b700f190e692bb2bcc56b1f}} 
+\index{communication.h@{communication.h}!sendFrame@{sendFrame}}
+\index{sendFrame@{sendFrame}!communication.h@{communication.h}}
+\doxysubsubsection{\texorpdfstring{sendFrame()}{sendFrame()}}
+{\footnotesize\ttfamily void send\+Frame (\begin{DoxyParamCaption}\item[{byte $\ast$}]{a\+\_\+frame,  }\item[{int}]{a\+\_\+frame\+Size }\end{DoxyParamCaption})}
+
+
+
+Definition at line 26 of file communication.\+h.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{26                                                 \{}
+\DoxyCodeLine{27   Serial.print(\textcolor{stringliteral}{"-\/-\/-\/ [ Envoi trame: "});}
+\DoxyCodeLine{28   printFrame(a\_frame, a\_frameSize);}
+\DoxyCodeLine{29   LoRa.beginPacket();}
+\DoxyCodeLine{30   \textcolor{keywordflow}{for} (\textcolor{keywordtype}{int} cursor = 0; cursor < a\_frameSize; cursor++) \{}
+\DoxyCodeLine{31     \textcolor{keywordflow}{if} ((\textcolor{keywordtype}{char}) * (a\_frame + cursor) < 0) \{ \textcolor{comment}{// si la data est négative, on evoie le '-\/' a part }}
+\DoxyCodeLine{32       LoRa.print(\textcolor{charliteral}{'-\/'});}
+\DoxyCodeLine{33       *(a\_frame + cursor) *= -\/1; \textcolor{comment}{// on prends la partie entière}}
+\DoxyCodeLine{34     \}}
+\DoxyCodeLine{35     LoRa.print( * (a\_frame + cursor)); \textcolor{comment}{// modif }}
+\DoxyCodeLine{36     LoRa.print(\textcolor{charliteral}{';'});}
+\DoxyCodeLine{37   \}}
+\DoxyCodeLine{38   LoRa.endPacket();}
+\DoxyCodeLine{39   \textcolor{keywordflow}{return};}
+\DoxyCodeLine{40 }
+\DoxyCodeLine{41 \}}
+
+\end{DoxyCode}
