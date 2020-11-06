@@ -131,7 +131,7 @@ Parlons en détail de **buffer** et **FRAMESIZE** : buffer contient la trame typ
 
 A savoir que le **LoRa** transmet les trames bytes après bytes ( non-signés ). Le choix de trame que j'ai choisis est le suivant 
 
-![Projet Général](/src/trame.png)
+![Trame](/src/trame.png)
 
 ## Le module recepteur : Receiver/ Rx 
 
