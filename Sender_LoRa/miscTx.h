@@ -36,5 +36,9 @@ void alarme() {
 }
 
 
+/**
+ * @brief Fonction d'affichage des dernières mesures
+ */
+void afficheMesure(){
 
-
+}

@@ -97,6 +97,7 @@ void setup() {
 void loop() {
   Serial.print("Noeud Colecteur\n[ Nombre Tx conectés:");
   Serial.println(logedIn, DEC);
+Serial.print("");
 
   if (getFramme(buffer, FRAMESIZE, LoRa.parsePacket())) { // received a packet
 
@@ -108,6 +109,7 @@ void loop() {
       return;
     }
 
+    afficheMesure();
     update(buffer);
 
   }

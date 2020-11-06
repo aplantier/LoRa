@@ -77,7 +77,7 @@ static bool b_Alerte = false; // Detection du feu : true
 byte humTmp[5]; // tableau de stockage des mesures Hum/ tmp 
 byte idTx; //identifiant de l'appareil s'il nest pas enregistré dans tx =0 
 byte randNumber; // clé pour l'identifiant 
-byte buffer[FRAMESIZE] = {
+byte buffer[FRAMESIZE] = { // buffer de communication pour les données
   0
 };
 
