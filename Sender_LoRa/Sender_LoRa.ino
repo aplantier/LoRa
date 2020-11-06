@@ -142,6 +142,12 @@ void setup() {
 void loop() {
   Serial.print("ID tx : ");
   Serial.println(idTx);
+  if (idTx == 0) // pas encore authentifié 
+  {
+    enregistrementRx(); //
+    return; // si pas enregistré, pas de suite 
+
+  }
   if (b_Alerte) // Etat d'alerte : feu détecté 
   {
     alarme(); // SIgnal Sonore
@@ -152,15 +158,10 @@ void loop() {
     // TODO: remplacer par une interuption de l'alarme avec BP
   }
 
-  if (idTx == 0) // pas encore authentifié 
-  {
-    enregistrementRx(); //
-    return; // si pas enregistré, pas de suite 
-
-  }
 
   buildFrame();
   sendFrame(buffer, FRAMESIZE);
+  afficheMesure();
 
   //Serial.print(buffer);
 
@@ -179,7 +180,8 @@ void flame_detected() {
 /**
  * @brief Construction de la tramme a envoyer
  * @details construit la tramme 
- * {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
+ * tramme donnée : {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
+ * tramme authentification : {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
  */
 void buildFrame(bool auth = false) {
   if (auth) { // trame d'authentification
@@ -298,8 +300,8 @@ void enregistrementRx() {
         Serial.println(idTx);
         return;
       }
-
-      tentatives++;
+      else 
+        tentatives++;
     }
 
   }

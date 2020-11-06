@@ -17,3 +17,8 @@ struct Rx
 	int reportCount; // nombre de report 
 	
 };
+
+void update(byte * buffer){
+
+
+}

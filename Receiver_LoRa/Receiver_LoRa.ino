@@ -57,7 +57,7 @@ int prLe = preamLengt;
 byte buffer[FRAMESIZE] = {
   0
 }; // tramme de buffing contenant la data netoyée 
-static int logedIn = 0; // nombre d'appareils Tx enregistrés
+volatile int logedIn = 0; // nombre d'appareils Tx enregistrés
 
 // ** Librairies
 #include <SPI.h>
@@ -72,6 +72,8 @@ struct Rx registre[MAXREGISTRE]; // les Tx enregistrés sur l'appareil
 
 // ** Entetes fonctions 
 void enregistrementTx();
+
+void update(byte * buffer);
 
 // ** Initiatilisation 
 void setup() {
@@ -93,11 +95,16 @@ void setup() {
 }
 
 // ** Boucle d'exec
-
+volatile int timer =450;
 void loop() {
-  Serial.print("Noeud Colecteur\n[ Nombre Tx conectés:");
-  Serial.println(logedIn, DEC);
-Serial.print("");
+  if(timer++==9500)
+  {
+      Serial.print("Noeud Colecteur\n[ Nombre Tx conectés:");
+      Serial.println(logedIn, DEC);
+      Serial.print("");
+        timer =0;
+  }
+
 
   if (getFramme(buffer, FRAMESIZE, LoRa.parsePacket())) { // received a packet
 
@@ -109,7 +116,7 @@ Serial.print("");
       return;
     }
 
-    afficheMesure();
+  
     update(buffer);
 
   }

@@ -41,4 +41,24 @@ void alarme() {
  */
 void afficheMesure(){
 
+  Serial.print("Appareil : ");
+  Serial.print(idTx);
+  Serial.print("Etat d'alerte : ");
+  Serial.print(buffer[1]?"oui":"non");
+  Serial.print("---------\nMesures (possibilité d'erreur :");
+  Serial.print(buffer[2]?"oui":"non");
+  Serial.print("\n\t|_> Humiditée : ");
+  Serial.print(buffer[3],DEC);
+  Serial.print(",");
+  Serial.print(buffer[4],DEC);
+
+  Serial.print("%\n\t|_> Temperature : ");
+  Serial.print(buffer[5],DEC);
+  Serial.print(",");
+  Serial.print(buffer[6],DEC);
+
+  Serial.print("°\n\t|_> Spectre infrarouge : ");
+  Serial.print(buffer[7],DEC);
+  Serial.println("%");
 }
+
