@@ -5,7 +5,11 @@
  * Fonctions diverses pour Tx 
  */
 
-
+enum typeTrame {
+  donnees = 0,
+  authentification = 1,
+  handcheck = 2
+};
 
 /**
  * @brief Signal d'alerte audio

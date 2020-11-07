@@ -75,14 +75,17 @@
 #define CANAL 0xA2 //le canal de communication
 
 #define FRAMESIZE 10 // taille de la framme 
+#define HANDCHECKLIMIT 10
 
 // ** Variables globales 
 static int i_periode = 5000; // Temps du cycle 
 static int i_AlertePeriode = 500; // Temps du cycle en periode d'alerte
 static bool b_Alerte = false; // Detection du feu : true 
+bool logedin = false; // Si enregistré auprès de Rx
+char handCheckFailed=0;
 byte humTmp[5]; // tableau de stockage des mesures Hum/ tmp 
 byte idTx; //identifiant de l'appareil s'il nest pas enregistré dans tx =0 
-byte randNumber; // clé pour l'identifiant 
+byte randNumber; // clé pour l'identifiant compris dans [1-125]
 byte buffer[FRAMESIZE] = { // buffer de communication pour les données
   0
 };
@@ -99,16 +102,18 @@ int prLe = preamLengt; // taille du preambule
 #include <LoRa.h>
 
 #include "miscTx.h"
+
 #include "humTemp.h"
+
 #include "communication.h"
 
 
-
 // ** Entetes fonctions 
-void flame_detected();
-void buildFrame(bool auth = false);
-void sendFrame();
-void enregistrementRx();
+void flame_detected() ;
+void buildFrame(typeTrame auth = donnees)  ;
+void sendFrame()  ;
+void enregistrementRx() ;
+bool handCheck() ;
 
 // ** Initiatilisation 
 void setup() {
@@ -138,19 +143,42 @@ void setup() {
   idTx = 0;
 
   // la trame a envoyer
-
+  randomSeed(analogRead(5));
 }
 
 // ** Boucle d'exec
-
+char keepAlive=10;
 void loop() {
+  if(keepAlive--==0) 
+  {
+  keepAlive=10;
+  logedin = false;
+  }
   Serial.print("ID tx : ");
-  Serial.println(idTx);
+  Serial.print(idTx);
+  Serial.print("  (Authentifié  ; ");
+  Serial.println( logedin ? "oui )": "non )");
   if (idTx == 0) // pas encore authentifié 
   {
     enregistrementRx(); //
     return; // si pas enregistré, pas de suite 
 
+  }
+  if (!logedin) {
+    if ( handCheck() ) 
+    {
+      logedin = true;
+    }
+    else
+    {
+      if(handCheckFailed++ == HANDCHECKLIMIT) // au bout de 10 tentatives de handcheck, on considère l'authentification échouée
+      {
+        Serial.println(" HandCheck Failed, réinitialisation de l'appareil");
+        idTx=0;
+      }
+      return;
+    }
+    
   }
   if (b_Alerte) // Etat d'alerte : feu détecté 
   {
@@ -159,7 +187,6 @@ void loop() {
 
     // TODO: remplacer par une interuption de l'alarme avec BP
   }
-
 
   buildFrame();
   sendFrame(buffer, FRAMESIZE);
@@ -174,7 +201,7 @@ void loop() {
  * @brief Fonction appelée sur l'interuption
  * @details Passage a l'etat d'alerte haut 
  */
- void flame_detected() {
+void flame_detected() {
   b_Alerte = true;
   Serial.println("Interuption : Flame detectee");
 }
@@ -185,90 +212,136 @@ void loop() {
  * tramme donnée : {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
  * tramme authentification : {ID, Etat, err, hum_10, hum_dec, tmp_10, tmp_dec, infra, chksm, \0}
  */
- void buildFrame(bool auth = false) {
-  if (auth) { // trame d'authentification
-  Serial.println(" Construction tramme authentification");
+void buildFrame(typeTrame trameMod = donnees) { // par defaut construit une tramme de données
+  switch (trameMod) {
+  case donnees: // Construction tramme de données 
+  {
+    Serial.print("[ Construction tramme de données\n|_>");
+    for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
+      switch (buffCursor) {
+        case 0:
+        buffer[buffCursor] = (char) idTx; // identifiant de Tx  
+        break;
 
-  for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
-    switch (buffCursor) {
-      case 0:
-      buffer[buffCursor] = (byte) idTx;
-      break;
+        case 1:
+        buffer[buffCursor] = (char) b_Alerte ? 1 : 0; // 
+        break;
 
-      case 1:
-      buffer[buffCursor] = (byte) randNumber;
-      break;
+        case 2:
+        buffer[buffCursor] = (char)(humTemp() ? 0 : 1); // si pas d'erreurs err=0       
+        break;
 
-      case FRAMESIZE - 1:
-      buffer[buffCursor] = (byte)
-      '\0';
-      break;
+        case 3:
+        buffer[buffCursor] = (char) humTmp[0]; //Humidité entier
+        break;
 
-      case FRAMESIZE - 2:
-      buffer[buffCursor] = 0;
-      for (int i = 0; i < FRAMESIZE - 2; i++)
-      buffer[buffCursor] += (char) buffer[i];
+        case 4:
+        buffer[buffCursor] = (char) humTmp[1]; //Humidité decimal      
+        break;
+
+        case 5:
+        buffer[buffCursor] = (char) humTmp[2]; // Temp entier    
+        break;
+
+        case 6:
+        buffer[buffCursor] = (char) humTmp[3]; // Temp decimal     
+        break;
+
+        case 7:
+        buffer[buffCursor] = (unsigned char) 256 - (256 * analogRead(a_flame) / 1024); // Valeur Infra
+        break;
+
+        case FRAMESIZE - 1:
+        buffer[buffCursor] = (char)
+        '\0';
+        break;
+
+      case FRAMESIZE - 2: // Calcul du checksum 
+      {
+        buffer[buffCursor] = 0;
+        for (int i = 0; i < FRAMESIZE - 2; i++)
+        buffer[buffCursor] += (char) buffer[i];
+      }
       break;
 
       default:
-      buffer[buffCursor] = (byte) - 11;
-    }
+        buffer[buffCursor] = (char) 0; // remplissage a zero de la frame pour les indexes non renseignés
+      } // fin switch 
+    } // fin for 
   }
-  Serial.println("Affichage de la trame d'authentification");
-  printFrame(buffer, FRAMESIZE);
+  break;
 
-    return; // RTant que Rx n'est pas authentifié on sort. 
-  }
+  case authentification: { // tramme authentification { }
+  Serial.print("[ Construction tramme authentification\n|_>");
   for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
     switch (buffCursor) {
       case 0:
-      buffer[buffCursor] = (char) idTx; // identifiant de Tx  
-      break;
+        buffer[buffCursor] = (byte) idTx; // egal a 0 si non authentifié
+        break;
 
-      case 1:
-      buffer[buffCursor] = (char) b_Alerte ? 1 : 0; // 
-      break;
+        case 1:
+        buffer[buffCursor] = (byte) randNumber; //clé 
+        break;
 
-      case 2:
-      buffer[buffCursor] = (char)(humTemp() ? 0 : 1); // si pas d'erreurs err=0       
-      break;
+        case FRAMESIZE - 1:
+        buffer[buffCursor] = (byte)
+        '\0';
+        break;
 
-      case 3:
-      buffer[buffCursor] = (char) humTmp[0]; //Humidité entier
-      break;
+        case FRAMESIZE - 2:
+        buffer[buffCursor] = 0;
+        for (int i = 0; i < FRAMESIZE - 2; i++)
+        buffer[buffCursor] += (char) buffer[i];
+        break;
 
-      case 4:
-      buffer[buffCursor] = (char) humTmp[1]; //Humidité decimal      
-      break;
-
-      case 5:
-      buffer[buffCursor] = (char) humTmp[2]; // Temp entier    
-      break;
-
-      case 6:
-      buffer[buffCursor] = (char) humTmp[3]; // Temp decimal     
-      break;
-
-      case 7:
-      buffer[buffCursor] = (unsigned char) 256 - (256 * analogRead(a_flame) / 1024); // Valeur Infra
-      break;
-
-      case FRAMESIZE - 1:
-      buffer[buffCursor] = (char)
-      '\0';
-      break;
-
-    case FRAMESIZE - 2: { // Calcul du checksum 
-      buffer[buffCursor] = 0;
-      for (int i = 0; i < FRAMESIZE - 2; i++)
-      buffer[buffCursor] += (char) buffer[i];
+        default:
+        buffer[buffCursor] = - 11;
+      }
     }
-    break;
 
-    default:
-      buffer[buffCursor] = (char) 0; // remplissage a zero de la frame pour les indexes non renseignés
+  }
+  break;
+
+  case handcheck: { // tramme handCheck 
+    Serial.print("[ Construction tramme HandCheck \n|_>");
+    for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
+      switch (buffCursor) {
+        case 0: 
+        buffer[buffCursor] =(byte) 0;
+        break;
+
+        case 1:
+        buffer[buffCursor] = (byte) 0;
+        break;
+
+        case 2:
+        buffer[buffCursor] = (byte) idTx;
+        break;
+
+        case 3:
+        buffer[buffCursor] = (byte) randNumber;
+        break;
+
+        case FRAMESIZE - 1:
+        buffer[buffCursor] = (byte)
+        '\0';
+        break;
+
+        case FRAMESIZE - 2:
+        buffer[buffCursor] = 0;
+        for (int i = 0; i < FRAMESIZE - 2; i++)
+        buffer[buffCursor] += (char) buffer[i];
+        break;
+
+        default:
+        buffer[buffCursor] = (byte) 0;
+
+      }
     }
   }
+  break;
+}
+printFrame(buffer, FRAMESIZE);
 }
 
 /**
@@ -277,44 +350,73 @@ void loop() {
  *          pour cela il passe en emetteur et envoie sa clé d'auth puis se met en recepteur. Tant qu'une trame de validation
  *          de l'enregistrement n'arrive pas, il continue d'essayer. 
  */
- void enregistrementRx() {
+void enregistrementRx() {
 
   byte receptFrame[50] = {
     0
   };
-  randNumber = (char) random(125); // clé d'authentification
-  buildFrame(true); // construction de la tramme d'authentification
+  randNumber = (char) random(11, 125); // clé d'authentification ( clé != de l'id max des autres Tx )
+  buildFrame(authentification); // construction de la tramme d'authentification
   sendFrame(buffer, FRAMESIZE);
-  LoRa.receive();
 
-  int tentatives = 0; //
-  int timeout =10000;
-  int pcktsize=0;
-  while (tentatives < 10 && timeout != 0) {
-    pcktsize=LoRa.parsePacket();
-    if (pcktsize) {
-      Serial.print("Tentative apairrement :");
-      Serial.print(tentatives + 1, DEC);
-      Serial.println("/10");
-      getFramme(receptFrame, 50, pcktsize);
-      
-      if ( ( * receptFrame == randNumber)) {
-        idTx = * (1 + receptFrame);
-        Serial.print("Appairement avec Rx réussi id :");
-        Serial.println(idTx);
-        buildFrame(true); // construction de la tramme d'authentification
-        sendFrame(buffer, FRAMESIZE);
-        LoRa.receive();
-        return;
-      }
-       tentatives++;
-       sendFrame(buffer, FRAMESIZE);
-       LoRa.receive();
-       delay(2000);
-    }
-      timeout--;
-      
+  LoRa.receive();
+  delay(2000);
+  int pcktsize = 0;
+  pcktsize = LoRa.parsePacket();
+  while( pcktsize==0) {
+    sendFrame(buffer, FRAMESIZE);
+    LoRa.receive();
+    delay(2000);
+    pcktsize = LoRa.parsePacket();
   }
-  Serial.println("Impossible de joindre Rx");
-  return;
+
+  getFramme(receptFrame, 50, pcktsize);
+  if (( * receptFrame == randNumber)) // si la clée correspond
+  {
+    idTx = * (1 + receptFrame); // enregistrement de l'idTx proposé par Rx 
+  }
+}
+
+/**
+ * @brief Fonction de handCheck avec Rx 
+ * @details Cette fonctions permet de vérifier que le Tx est bien en communication avec Rx
+ * @return true si confirmation de conection
+ * @return false sinon 
+ */
+bool handCheck() {
+
+  byte receptFrame[50] = {
+    0
+  };
+  randNumber = (char) random(11, 125); // clé d'authentification ( clé != de l'id max des autres Tx )
+  buildFrame(handcheck); // construction de la tramme d'authentification
+  sendFrame(buffer, FRAMESIZE);
+  
+
+  LoRa.receive();
+  delay(2000);
+
+  int pcktsize = 0;
+  pcktsize = LoRa.parsePacket();
+
+  while( pcktsize==0) {
+    sendFrame(buffer, FRAMESIZE);
+    LoRa.receive();
+    delay(2000);
+    pcktsize = LoRa.parsePacket();
+  }
+
+  getFramme(receptFrame, 50, pcktsize);
+  Serial.print("HandCheck :");
+
+  if (( * receptFrame == idTx) && ( *( receptFrame + 1) == randNumber)  )
+  {
+    Serial.println(" reussi");
+    return true;
+  }
+  else
+  {
+    Serial.println(" echoué");
+    return false;
+  }
 }

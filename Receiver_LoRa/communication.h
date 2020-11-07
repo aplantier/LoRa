@@ -6,13 +6,26 @@
  * 
  */
 
-// ** SIgnatures 
+// ** Signatures Méthodes
+//--------------------------
 
 byte byteTabToByte(byte * a_byteTabToParse, int dataSize);
 static void printFrame(byte * a_frame, int a_frameSize);
 void sendFrame(byte * a_frame, int a_frameSize);
 bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize);
 
+
+// ** Definitions méthodes 
+//--------------------------
+
+/**
+ * @brief Fonction d'affichage d'une trame
+ * @details Affichage d'une trame 
+ * @Pre: Taille tramme <= a_frameSize
+ * 
+ * @param a_frame la tramme a afficher
+ * @param a_frameSize taille de la tramme a afficher 
+ */
 static void printFrame(byte * a_frame, int a_frameSize) {
 
   Serial.print("[");
@@ -23,6 +36,13 @@ static void printFrame(byte * a_frame, int a_frameSize) {
   Serial.println(']');
 }
 
+/**
+ * @brief Fonction d'envoie d'une tramme
+ * @details Envoi d'une tramme via le protocole LoRa avec comme séparateurs ';'
+ * 
+ * @param a_frame tramme a envoyer 
+ * @param a_frameSize Taille de la tramme à envoyer 
+ */
 void sendFrame(byte * a_frame, int a_frameSize) {
   Serial.print("--- [ Envoi trame: ");
   printFrame(a_frame, a_frameSize);
@@ -30,9 +50,10 @@ void sendFrame(byte * a_frame, int a_frameSize) {
   for (int cursor = 0; cursor < a_frameSize; cursor++) {
     if ((char) * (a_frame + cursor) < 0) { // si la data est négative, on evoie le '-' a part 
       LoRa.print('-');
-      *(a_frame + cursor) *= -1; // on prends la partie entière
+      LoRa.print(((char) * (a_frame + cursor) )* (-1));
     }
-    LoRa.print( * (a_frame + cursor)); // modif 
+    else 
+      LoRa.print( * (a_frame + cursor)); // modif 
     LoRa.print(';');
   }
   LoRa.endPacket();
@@ -55,6 +76,7 @@ void sendFrame(byte * a_frame, int a_frameSize) {
 
 bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize) {
   if (a_i_framSize == 0) return false;
+  Serial.print("--- [ Reception trame: ");
 
   int cursor = 0; // curseur de remplissage de la tramme finale
 
@@ -73,7 +95,6 @@ bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize) 
       bytesDataCount = 0; // réinitialisation 
     } else bytesDataCount++;
   }
-  Serial.print("--- [ Reception trame: ");
   printFrame(a_outputFrame, cursor);
   return true;
 

@@ -36,7 +36,7 @@
  *  + communication.h: Fonctions de manipulation de framme communes a Tx 
  */
 
-#define led 13 // Led de l'arduino
+ #define led 13 // Led de l'arduino
 // valeurs Par deff pour la config LoRa
 #define txPower 20 // puissance de transmission incl. []
 #define SprFac 12 // spreading Factor incl[7;12]
@@ -57,7 +57,7 @@ int prLe = preamLengt;
 byte buffer[FRAMESIZE] = {
   0
 }; // tramme de buffing contenant la data netoyée 
-static int logedIn = 0; // nombre d'appareils Tx enregistrés
+static char logedIn = 0; // nombre d'appareils Tx enregistrés
 
 // ** Librairies
 #include <SPI.h>
@@ -99,32 +99,49 @@ volatile int timer =450;
 void loop() {
   if(timer++==9500)
   {
-      Serial.print("Noeud Colecteur\n[ Nombre Tx conectés:");
-      Serial.println(logedIn, DEC);
-      Serial.print("");
-        timer =0;
+    Serial.print("Noeud Colecteur [ Tx conectés: ");
+    Serial.print(logedIn, DEC);
+    Serial.print(" / ");
+    Serial.print(MAXREGISTRE, DEC);
+    Serial.println(" ] ");
+    timer =0;
   }
 
-    
+
 
   int pcktSize=LoRa.parsePacket();
   if ( pcktSize ) { // received a packet
 
-    getFramme(buffer, FRAMESIZE,pcktSize );
-    if ( * buffer == 0) // trame recu d'un appareil non apairé 
-    {
-      enregistrementTx( *(buffer + 1)); // enregistrement de l'appareil avec la clé 
-      return;
-    }
-    if ( ( * buffer > logedIn ) ||  ( * buffer < 0) )
+    getFramme(buffer, FRAMESIZE,pcktSize );// recupération de la tramme 
+
+
+    if ( ( * buffer > (byte) logedIn ) ||  ( * buffer < 0) )  // id incohérent
     {
       Serial.println("Tentative de conection invalide");
      return; // si un appareil avec un id incohérent,
 
+   }
+    if ( * buffer == 0) // trame recu d'un appareil non apairé 
+    {
+      if ( * (buffer + 1) == 0 && registre[logedIn].actif) // demande de handCheck 
+      {
+        byte answer[5] = {
+          * (buffer + 2),  // idTx
+          * (buffer + 3),  // key
+          '\0'
+        };
+        sendFrame(answer, 5);
+      }
+      else // enregistrement d'un nouvel appareil  avec key
+      {        
+      enregistrementTx( *(buffer + 1)); // enregistrement de l'appareil avec la clé 
+      return;
     }
+  }
 
 
-  
+
+
     update(buffer); // LoRa.packetRssi(); 
 
   }
@@ -139,42 +156,46 @@ void loop() {
  * @param a_key clé d'authentification.
  */
 
-void enregistrementTx(byte a_key) {
-  Serial.println("--- [ Tentative d'apairement détecté");
+ void enregistrementTx(byte a_key) {
+  Serial.println("[ Tentative d'apairement :");
+  if(!registre[logedIn].actif)
+  {
+
   byte answer[5] = {
     a_key,
-    logedIn + 1,
+    ++logedIn,
     '\0'
   };
+  registre[logedIn].actif=true;
   sendFrame(answer, 5);
-   LoRa.receive();
+  }
+
+ /* LoRa.receive();
    // on se met en recepteur pour recevoir la réponse
-  int timout = 10000;
+   int timout = 10000;
   while (timout-- != 0) { // Tentatives de conections = au nombre de device non authentifié
-    
-    
+
+
     if (LoRa.parsePacket() ) {
-     
-        getFramme(buffer, FRAMESIZE, LoRa.available());
-        Serial.print("--- [ Apairement : ");
+
+      getFramme(buffer, FRAMESIZE, LoRa.available());
+      Serial.print("--- [ Apairement : ");
       if (( * buffer == logedIn + 1) && (a_key == * (1 + buffer)))
       {
 
-      logedIn++;
+        logedIn++;
       registre[logedIn].actif = false;// l'appareil est enregistré mais ne sera activé que à la première reception
       registre[logedIn].reportCount = 0;
       Serial.print("=  Reussi avec :");
       Serial.println(logedIn);
       return;
-      }
-      else 
-      Serial.println(" échoué");
-
     }
-    delay(2000);
-    Serial.println(" OUverture LoRa echoué");
+    else 
+    Serial.println(" échoué");
 
-    
+  }*/
 
-  }
+
+
+
 }
