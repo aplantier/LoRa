@@ -45,9 +45,9 @@ void alarme() {
  */
 void afficheMesure(){
 
-  Serial.print("Appareil : ");
+  Serial.print("[ Appareil : ");
   Serial.print(idTx);
-  Serial.print("Etat d'alerte : ");
+  Serial.print(" ] Etat d'alerte : ");
   Serial.print(buffer[1]?"oui":"non");
   Serial.print("---------\nMesures (possibilité d'erreur :");
   Serial.print(buffer[2]?"oui":"non");

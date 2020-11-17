@@ -36,6 +36,8 @@
  *  + communication.h: Fonctions de manipulation de framme communes a Tx 
  */
 
+ #define PRINT_VERBOSE_SERIAL false
+
  #define led 13 // Led de l'arduino
 // valeurs Par deff pour la config LoRa
 #define txPower 20 // puissance de transmission incl. []
@@ -57,6 +59,7 @@ int prLe = preamLengt;
 byte buffer[FRAMESIZE] = {
   0
 }; // tramme de buffing contenant la data netoyée 
+
 static char logedIn = 0; // nombre d'appareils Tx enregistrés
 
 // ** Librairies
@@ -73,7 +76,7 @@ struct Rx registre[MAXREGISTRE]; // les Tx enregistrés sur l'appareil
 // ** Entetes fonctions 
 void enregistrementTx();
 
-void update(byte * buffer);
+void update(byte * buffer, int );
 
 // ** Initiatilisation 
 void setup() {
@@ -84,6 +87,8 @@ void setup() {
   if (!LoRa.begin(915E6)) {
     Serial.println("/!\\Lora echec");
   }
+
+
   LoRa.setTxPower(txPo, 1);
   LoRa.setSpreadingFactor(spFa);
   LoRa.setSignalBandwidth(baWi);
@@ -99,50 +104,66 @@ volatile int timer =450;
 void loop() {
   if(timer++==9500)
   {
+    #if PRINT_VERBOSE_SERIAL
+
     Serial.print("Noeud Colecteur [ Tx conectés: ");
     Serial.print(logedIn, DEC);
     Serial.print(" / ");
     Serial.print(MAXREGISTRE, DEC);
     Serial.println(" ] ");
+    #endif
+
     timer =0;
   }
 
 
 
   int pcktSize=LoRa.parsePacket();
+  int frameSize=0;
   if ( pcktSize ) { // received a packet
 
-    getFramme(buffer, FRAMESIZE,pcktSize );// recupération de la tramme 
+    getFramme(buffer, &frameSize,pcktSize );// recupération de la tramme 
 
-
-    if ( ( * buffer > (byte) logedIn ) ||  ( * buffer < 0) )  // id incohérent
+    if ( ( * buffer > logedIn ) ||  ( * buffer < 0) )  // id incohérent
     {
+
       Serial.println("Tentative de conection invalide");
+
+
      return; // si un appareil avec un id incohérent,
 
    }
     if ( * buffer == 0) // trame recu d'un appareil non apairé 
     {
-      if ( * (buffer + 1) == 0 && registre[logedIn].actif) // demande de handCheck 
+      if ( * (buffer + 1) == 0 ) // demande de handCheck 
       {
-        byte answer[5] = {
-          * (buffer + 2),  // idTx
-          * (buffer + 3),  // key
+        byte answer[3] = {
+          0,  // idTx
+          0,  // key
           '\0'
         };
-        sendFrame(answer, 5);
-      }
+        if(* (buffer + 2)<=logedIn)
+        {
+
+         answer[0] = * (buffer + 2);  // idTx
+         answer[1] = * (buffer + 3);  // key
+         answer[2] = '\0';
+         
+       }
+       else{
+         answer[0] = * (buffer + 2);  // idTx
+         answer[1] = 0;  // key
+         answer[2] = '\0';
+       }
+       sendFrame(answer, 5);
+     }
       else // enregistrement d'un nouvel appareil  avec key
       {        
       enregistrementTx( *(buffer + 1)); // enregistrement de l'appareil avec la clé 
       return;
     }
   }
-
-
-
-
-    update(buffer); // LoRa.packetRssi(); 
+    update(buffer, frameSize); // LoRa.packetRssi(); 
 
   }
 }
@@ -157,45 +178,37 @@ void loop() {
  */
 
  void enregistrementTx(byte a_key) {
+
+
+  #if PRINT_VERBOSE_SERIAL
   Serial.println("[ Tentative d'apairement :");
-  if(!registre[logedIn].actif)
+  #endif
+
+
+  if(!registre[logedIn+1].actif)
   {
 
-  byte answer[5] = {
-    a_key,
-    ++logedIn,
-    '\0'
-  };
-  registre[logedIn].actif=true;
-  sendFrame(answer, 5);
+    byte answer[5] = {
+      a_key,
+      ++logedIn,
+      '\0'
+    };
+    registre[logedIn].actif=true;
+    sendFrame(answer, 5);
+  }
+}
+
+void update(byte * buffer, int a_frameSize){
+  Serial.println("COUCOU");
+  registre[logedIn].reportCount++;
+
+  char outputFrame [256]{0};
+
+  for(int i =0 ; i<a_frameSize; i++)
+  {
+    Serial.print((char)*(i+buffer),DEC);
+    Serial.print(',');
   }
 
- /* LoRa.receive();
-   // on se met en recepteur pour recevoir la réponse
-   int timout = 10000;
-  while (timout-- != 0) { // Tentatives de conections = au nombre de device non authentifié
-
-
-    if (LoRa.parsePacket() ) {
-
-      getFramme(buffer, FRAMESIZE, LoRa.available());
-      Serial.print("--- [ Apairement : ");
-      if (( * buffer == logedIn + 1) && (a_key == * (1 + buffer)))
-      {
-
-        logedIn++;
-      registre[logedIn].actif = false;// l'appareil est enregistré mais ne sera activé que à la première reception
-      registre[logedIn].reportCount = 0;
-      Serial.print("=  Reussi avec :");
-      Serial.println(logedIn);
-      return;
-    }
-    else 
-    Serial.println(" échoué");
-
-  }*/
-
-
-
-
+  Serial.println("\n\r");
 }

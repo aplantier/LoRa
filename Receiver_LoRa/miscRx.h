@@ -14,11 +14,7 @@
 struct Rx
 {
 	bool actif;
-	int reportCount; // nombre de report 
+	unsigned int reportCount; // nombre de report 
 	
 };
 
-void update(byte * buffer){
-
-
-}

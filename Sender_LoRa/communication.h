@@ -28,12 +28,18 @@ bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize);
  */
 static void printFrame(byte * a_frame, int a_frameSize) {
 
+#if PRINT_VERBOSE_SERIAL
   Serial.print("[");
   for (int cursor = 0; cursor < a_frameSize; cursor++) {
     Serial.print((char) * (a_frame + cursor), DEC);
     Serial.print(cursor == a_frameSize - 1 ? '\ ' : ',');
   }
   Serial.println(']');
+#else
+
+#endif
+
+
 }
 
 /**
@@ -44,16 +50,25 @@ static void printFrame(byte * a_frame, int a_frameSize) {
  * @param a_frameSize Taille de la tramme à envoyer 
  */
 void sendFrame(byte * a_frame, int a_frameSize) {
+ 
+ #if PRINT_VERBOSE_SERIAL
+
   Serial.print("--- [ Envoi trame: ");
+
+  #endif
   printFrame(a_frame, a_frameSize);
   LoRa.beginPacket();
   for (int cursor = 0; cursor < a_frameSize; cursor++) {
     if ((char) * (a_frame + cursor) < 0) { // si la data est négative, on evoie le '-' a part 
+
       LoRa.print('-');
-      LoRa.print(((char) * (a_frame + cursor) )* (-1));
+      LoRa.print((char) * (a_frame + cursor) * -1,DEC);
     }
     else 
+    {
+      
       LoRa.print( * (a_frame + cursor)); // modif 
+    }
     LoRa.print(';');
   }
   LoRa.endPacket();
@@ -74,9 +89,12 @@ void sendFrame(byte * a_frame, int a_frameSize) {
  * @return bool false si erreur dans la lecture de frame 
  */
 
-bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize) {
+bool getFramme(byte * a_outputFrame, int * a_i_outputFrameSize, int a_i_framSize) {
   if (a_i_framSize == 0) return false;
+  
+  #if PRINT_VERBOSE_SERIAL
   Serial.print("--- [ Reception trame: ");
+  #endif
 
   int cursor = 0; // curseur de remplissage de la tramme finale
 
@@ -95,6 +113,8 @@ bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize) 
       bytesDataCount = 0; // réinitialisation 
     } else bytesDataCount++;
   }
+  
+  *a_i_outputFrameSize=cursor;
   printFrame(a_outputFrame, cursor);
   return true;
 
@@ -110,20 +130,20 @@ bool getFramme(byte * a_outputFrame, int a_i_outputFrameSize, int a_i_framSize) 
  * @return [description]
  */
 byte byteTabToByte(byte * a_byteTabToParse, int dataSize) {
-
   byte zero = (char)
   '0';
-  char result = 0;
-  int puissance = dataSize - 1;
+  int value=0;
+  int result = 0;
+  int puissance = dataSize;
   bool negatif = false; // si un - est dans la chaine (PRE: en tete )
   for (int i = 0; i < dataSize; i++) {
-
     if ( * (a_byteTabToParse + i) == '-') {
       negatif = true;
       puissance--;
       continue;
     }
-    result += (( * (a_byteTabToParse + i) - zero)) * pow(10, puissance--); // on monte en puissance les unités en fction de leurs place
+
+    result += (* (a_byteTabToParse + i) -zero) * ceil(pow ((double)10,(double) --puissance)); // on monte en puissance les unités en fction de leurs place
   }
-  return (byte) negatif ? -result : result; // renvoie d'un byte signé  ( char )
+  return (char) negatif ? (-1)*result : result; // renvoie d'un byte signé  ( char )
 }

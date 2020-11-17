@@ -57,6 +57,9 @@
  *   + humTemp.h Fonctions d'aquisition des mesures du capteur Ky-015
  *   + communication.h : Fonction comunes Tx/Rx pour le transfert et reception de trammes LoRa 
  */
+
+#define PRINT_VERBOSE_SERIAL true
+
 // ** Declaration des pins (a : analog, d: digital)
 #define a_flame A0 // ky-026 flame
 #define d_flame 2
@@ -140,6 +143,7 @@ void setup() {
   LoRa.setPreambleLength(prLe);
   LoRa.setSyncWord(CANAL);
   LoRa.enableCrc(); //activation du crc
+  LoRa.setTimeout(4);
   idTx = 0;
 
   // la trame a envoyer
@@ -149,11 +153,13 @@ void setup() {
 // ** Boucle d'exec
 char keepAlive=10;
 void loop() {
-  if(keepAlive--==0) 
+  if(keepAlive--==0) // verification periodique de l'authentification auprès de Rx
   {
   keepAlive=10;
   logedin = false;
   }
+  Serial.print("################### TENTATIVES : ");
+   Serial.println(keepAlive,DEC);
   Serial.print("ID tx : ");
   Serial.print(idTx);
   Serial.print("  (Authentifié  ; ");
@@ -193,6 +199,17 @@ void loop() {
   afficheMesure();
 
   //Serial.print(buffer);
+  if(b_Alerte){
+
+
+  delay(i_AlertePeriode);
+  }
+  else
+  {
+    LoRa.sleep();
+    delay(i_periode);
+    LoRa.idle();
+  }
 
   delay(b_Alerte ? i_AlertePeriode : i_periode); // en fonction de l'etat d'alerte, la periode varie
 }
@@ -216,7 +233,7 @@ void buildFrame(typeTrame trameMod = donnees) { // par defaut construit une tram
   switch (trameMod) {
   case donnees: // Construction tramme de données 
   {
-    Serial.print("[ Construction tramme de données\n|_>");
+    Serial.print("[ Construction tramme de données\n\r|_>");
     for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
       switch (buffCursor) {
         case 0:
@@ -272,7 +289,7 @@ void buildFrame(typeTrame trameMod = donnees) { // par defaut construit une tram
   break;
 
   case authentification: { // tramme authentification { }
-  Serial.print("[ Construction tramme authentification\n|_>");
+  Serial.print("[ Construction tramme authentification\n\r|_>");
   for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
     switch (buffCursor) {
       case 0:
@@ -295,7 +312,7 @@ void buildFrame(typeTrame trameMod = donnees) { // par defaut construit une tram
         break;
 
         default:
-        buffer[buffCursor] = - 11;
+        buffer[buffCursor] = -1;
       }
     }
 
@@ -303,7 +320,7 @@ void buildFrame(typeTrame trameMod = donnees) { // par defaut construit une tram
   break;
 
   case handcheck: { // tramme handCheck 
-    Serial.print("[ Construction tramme HandCheck \n|_>");
+    Serial.print("[ Construction tramme HandCheck \n\r|_>");
     for (int buffCursor = 0; buffCursor < FRAMESIZE; buffCursor++) {
       switch (buffCursor) {
         case 0: 
@@ -355,7 +372,8 @@ void enregistrementRx() {
   byte receptFrame[50] = {
     0
   };
-  randNumber = (char) random(11, 125); // clé d'authentification ( clé != de l'id max des autres Tx )
+  int size=0;
+  randNumber = (char) random(100, 125); // @modif clé d'authentification ( clé != de l'id max des autres Tx )
   buildFrame(authentification); // construction de la tramme d'authentification
   sendFrame(buffer, FRAMESIZE);
 
@@ -370,7 +388,7 @@ void enregistrementRx() {
     pcktsize = LoRa.parsePacket();
   }
 
-  getFramme(receptFrame, 50, pcktsize);
+  getFramme(receptFrame, &size, pcktsize);
   if (( * receptFrame == randNumber)) // si la clée correspond
   {
     idTx = * (1 + receptFrame); // enregistrement de l'idTx proposé par Rx 
@@ -384,7 +402,7 @@ void enregistrementRx() {
  * @return false sinon 
  */
 bool handCheck() {
-
+  int size =0;
   byte receptFrame[50] = {
     0
   };
@@ -406,7 +424,7 @@ bool handCheck() {
     pcktsize = LoRa.parsePacket();
   }
 
-  getFramme(receptFrame, 50, pcktsize);
+  getFramme(receptFrame, &size, pcktsize);
   Serial.print("HandCheck :");
 
   if (( * receptFrame == idTx) && ( *( receptFrame + 1) == randNumber)  )
