@@ -4,6 +4,8 @@ Module Objets Conectés
 ---
 
 # Projet d'Objets Conectés : Réseau de capteurs Communication LoRa
+## Info 
+Le remaniement du projet est en cours, cf branche LoRa_simple pour la version dynamique 
 
 ## Introduction
 
